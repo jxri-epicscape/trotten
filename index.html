@@ -377,7 +377,7 @@
 <body>
 
 <header class="header">
-  <span class="header-title">Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v6</span></span>
+  <span class="header-title">Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v7</span></span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
@@ -1036,7 +1036,8 @@ function quickAdd(input) {
     subs: [], archived: false, createdAt: now, updatedAt: now,
   });
   input.value = '';
-  save(); render();
+  render();
+  triggerSave();
   input.focus();
 }
 
@@ -1082,7 +1083,7 @@ function openModal(id, e) {
   document.getElementById('mTitle').textContent = p ? 'Muokkaa projektia' : 'Uusi projekti';
   document.getElementById('mName').value     = p ? p.title : '';
   document.getElementById('mDesc').value     = p ? (p.desc||'') : '';
-  document.getElementById('mPri').value      = p ? (p.priority||'normal') : 'normal';
+
   document.getElementById('mStatus').value   = p ? (p.status||'todo') : 'todo';
   document.getElementById('mDeadline').value = p ? (p.deadline||'') : '';
   document.getElementById('mEst').value      = p ? (p.est||'') : '';
@@ -1311,6 +1312,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v6</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v7</div>
 </body>
 </html>
