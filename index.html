@@ -595,7 +595,7 @@ async function doSetup() {
       const res = await fetch(`https://api.github.com/gists/${gistId}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
       });
-      if (!res.ok) throw new Error('Gist ei löydy tai token virheellinen');
+      if (!res.ok) throw new Error(`HTTP ${res.status} — tarkista token ja Gist ID`);
       cfg = { token, gistId };
       saveCfg();
       finishSetup();
