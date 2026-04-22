@@ -296,10 +296,51 @@
     .setup-status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 20px; }
     .setup-status.err { color: var(--danger); }
 
+    /* ── VIEW TOGGLE (icons only) ── */
+    .view-toggle button { padding: 7px 13px; font-size: 17px; }
+
+    /* ── FILTER PANEL ── */
+    .filter-panel {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .filter-panel .search { width: 180px; }
+
+    /* ── DROPDOWN ── */
+    .dd-wrap { position: relative; }
+    .dd-menu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); min-width: 120px; z-index: 150;
+      overflow: hidden;
+    }
+    .dd-menu button {
+      display: block; width: 100%; text-align: left;
+      padding: 10px 14px; font-size: 13px; background: none;
+      border: none; color: var(--text); cursor: pointer;
+    }
+    .dd-menu button:hover { background: var(--border); }
+
+    /* ── EXTRA FIELDS TOGGLE ── */
+    .extra-toggle {
+      font-size: 12px; color: var(--muted); cursor: pointer;
+      background: none; border: none; padding: 0; margin-bottom: 8px;
+      text-decoration: underline;
+    }
+
+    /* ── FILTER ACTIVE DOT ── */
+    .filter-active::after {
+      content: ''; display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); margin-left: 5px; vertical-align: middle;
+    }
+
     @media (max-width: 700px) {
       .kanban-view { grid-template-columns: 1fr; }
       .fr { grid-template-columns: 1fr; }
-      .search { width: 130px; }
+      .filter-panel .search { width: 100%; }
     }
   </style>
 </head>
@@ -308,27 +349,44 @@
 <header class="header">
   <span class="header-title">Trotten</span>
   <span class="save-status" id="saveStatus"></span>
+  <div class="spacer"></div>
 
+  <button class="btn btn-ghost btn-sm" id="filterBtn" onclick="toggleFilterPanel()">Hae ▾</button>
+
+  <div class="view-toggle">
+    <button id="vList" class="active" onclick="setView('list')" title="Lista">☰</button>
+    <button id="vKanban" onclick="setView('kanban')" title="Kanban">⊞</button>
+  </div>
+
+  <div class="dd-wrap">
+    <button class="btn btn-ghost btn-sm" onclick="toggleJsonMenu()">JSON ▾</button>
+    <div class="dd-menu hidden" id="jsonMenu">
+      <button onclick="document.getElementById('impFile').click();closeJsonMenu()">Tuo</button>
+      <button onclick="exportJSON();closeJsonMenu()">Vie</button>
+    </div>
+  </div>
+  <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
+
+  <button class="btn btn-primary" onclick="openModal(null)">+ Lisää</button>
+</header>
+
+<div class="filter-panel hidden" id="filterPanel">
   <input class="search" id="qSearch" type="text" placeholder="Hae..." oninput="render()">
-
   <select class="fsel" id="fStatus" onchange="render()">
     <option value="">Kaikki tilat</option>
     <option value="todo">Tekemättä</option>
     <option value="inprogress">Työn alla</option>
     <option value="done">Valmis</option>
   </select>
-
   <select class="fsel" id="fPriority" onchange="render()">
     <option value="">Kaikki prioriteetit</option>
     <option value="high">Korkea</option>
     <option value="normal">Normaali</option>
     <option value="low">Matala</option>
   </select>
-
   <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
   </select>
-
   <select class="fsel" id="fDeadline" onchange="render()">
     <option value="">Kaikki deadlinet</option>
     <option value="overdue">Myöhässä</option>
@@ -336,24 +394,10 @@
     <option value="week">Tällä viikolla</option>
     <option value="nodate">Ei deadlinea</option>
   </select>
-
   <select class="fsel" id="fGroup" onchange="render()">
     <option value="">Kaikki ryhmät</option>
   </select>
-
-  <div class="spacer"></div>
-
-  <div class="view-toggle">
-    <button id="vList" class="active" onclick="setView('list')">☰ Lista</button>
-    <button id="vKanban" onclick="setView('kanban')">⊞ Kanban</button>
-  </div>
-
-  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('impFile').click()">Tuo JSON</button>
-  <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
-  <button class="btn btn-ghost btn-sm" onclick="exportJSON()">Vie JSON</button>
-
-  <button class="btn btn-primary" onclick="openModal(null)">+ Lisää</button>
-</header>
+</div>
 
 <main class="main" id="main"></main>
 
@@ -397,20 +441,23 @@
       </div>
     </div>
 
-    <div class="fr">
-      <div class="fg">
-        <label class="fl">Deadline</label>
-        <input class="fi" id="mDeadline" type="date">
-      </div>
-      <div class="fg">
-        <label class="fl">Arvioitu aika (h)</label>
-        <input class="fi" id="mEst" type="number" placeholder="0" min="0" step="0.5">
-      </div>
+    <div class="fg">
+      <label class="fl">Deadline</label>
+      <input class="fi" id="mDeadline" type="date">
     </div>
 
-    <div class="fg">
-      <label class="fl">Kirjattu aika (h)</label>
-      <input class="fi" id="mLogged" type="number" placeholder="0" min="0" step="0.5">
+    <button class="extra-toggle" id="extraToggle" onclick="toggleExtra(event)">+ Arvioitu ja kirjattu aika</button>
+    <div id="extraFields" class="hidden">
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Arvioitu aika (h)</label>
+          <input class="fi" id="mEst" type="number" placeholder="0" min="0" step="0.5">
+        </div>
+        <div class="fg">
+          <label class="fl">Kirjattu aika (h)</label>
+          <input class="fi" id="mLogged" type="number" placeholder="0" min="0" step="0.5">
+        </div>
+      </div>
     </div>
 
     <div class="fg">
@@ -486,14 +533,10 @@
 const COLORS = [
   { name: 'Ei väriä',  hex: '' },
   { name: 'Punainen',  hex: '#ff4757' },
-  { name: 'Oranssi',   hex: '#ff6b35' },
   { name: 'Keltainen', hex: '#ffa502' },
   { name: 'Vihreä',    hex: '#2ed573' },
   { name: 'Sininen',   hex: '#1e90ff' },
   { name: 'Violetti',  hex: '#6c63ff' },
-  { name: 'Pinkki',    hex: '#ff6b9d' },
-  { name: 'Syaani',    hex: '#00d2d3' },
-  { name: 'Harmaa',    hex: '#747d8c' },
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -927,6 +970,38 @@ function del(id, e) {
 }
 function toggleArch() { showArchive = !showArchive; render(); }
 
+function toggleFilterPanel() {
+  const panel = document.getElementById('filterPanel');
+  const btn   = document.getElementById('filterBtn');
+  const open  = panel.classList.toggle('hidden') === false;
+  btn.classList.toggle('filter-active', hasActiveFilters());
+  btn.textContent = open ? 'Hae ▴' : 'Hae ▾';
+}
+
+function hasActiveFilters() {
+  return ['qSearch','fStatus','fPriority','fColor','fDeadline','fGroup']
+    .some(id => document.getElementById(id)?.value);
+}
+
+function toggleJsonMenu() {
+  document.getElementById('jsonMenu').classList.toggle('hidden');
+}
+function closeJsonMenu() {
+  document.getElementById('jsonMenu').classList.add('hidden');
+}
+
+function toggleExtra(e) {
+  e.preventDefault();
+  const el  = document.getElementById('extraFields');
+  const btn = document.getElementById('extraToggle');
+  const open = el.classList.toggle('hidden') === false;
+  btn.textContent = open ? '− Arvioitu ja kirjattu aika' : '+ Arvioitu ja kirjattu aika';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dd-wrap')) closeJsonMenu();
+});
+
 // ── MODAL ──────────────────────────────────────────────────────────────────
 
 function openModal(id, e) {
@@ -962,6 +1037,8 @@ function openModal(id, e) {
 function closeModal() {
   document.getElementById('overlay').classList.add('hidden');
   document.getElementById('stInput').value = '';
+  document.getElementById('extraFields').classList.add('hidden');
+  document.getElementById('extraToggle').textContent = '+ Arvioitu ja kirjattu aika';
   editingId = null;
 }
 
