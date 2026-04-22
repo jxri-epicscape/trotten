@@ -590,14 +590,17 @@ async function doSetup() {
   if (setupTab === 'exist') {
     const gistId = document.getElementById('setupGistId').value.trim();
     if (!gistId) { setSetupStatus('Syötä Gist ID.', true); return; }
-    setSetupStatus('Tarkistetaan...');
     try {
+      setSetupStatus('1/4 Lähetetään pyyntö GitHubiin...');
       const res = await fetch(`https://api.github.com/gists/${gistId}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
       });
+      setSetupStatus(`2/4 Vastaus saatu: HTTP ${res.status}`);
       if (!res.ok) throw new Error(`HTTP ${res.status} — tarkista token ja Gist ID`);
+      setSetupStatus('3/4 Tallennetaan asetukset...');
       cfg = { token, gistId };
       saveCfg();
+      setSetupStatus('4/4 Ladataan data...');
       finishSetup();
     } catch(e) { setSetupStatus('⚠ ' + e.message, true); }
   } else {
