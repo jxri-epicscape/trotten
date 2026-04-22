@@ -81,6 +81,7 @@
     .btn-primary  { background: var(--accent); color: #fff; }
     .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-danger   { background: var(--danger); color: #fff; }
+    .btn-success  { background: var(--success); color: #0a1a0a; }
     .btn-sm       { padding: 4px 10px; font-size: 12px; }
 
     /* ── MAIN ── */
@@ -262,6 +263,35 @@
     .group-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .b-group { background: #ffffff0d; color: var(--muted); font-size: 11px; }
 
+    /* ── QUICK CAPTURE ── */
+    .quick-capture {
+      max-width: 860px; margin: 0 auto 16px;
+      display: flex; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden;
+      transition: border-color .15s;
+    }
+    .quick-capture:focus-within { border-color: var(--accent); }
+    .quick-capture input {
+      flex: 1; padding: 13px 16px; font-size: 15px;
+      background: none; border: none; color: var(--text); outline: none;
+    }
+    .quick-capture input::placeholder { color: var(--muted); }
+    .quick-capture-hint {
+      font-size: 12px; color: #3a3a50; padding-right: 14px; white-space: nowrap;
+    }
+
+    /* ── PRIORITY TOGGLE ── */
+    .pri-toggle { display: flex; gap: 8px; }
+    .pri-btn {
+      padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); cursor: pointer;
+      font-size: 16px; transition: all .15s;
+    }
+    .pri-btn.sel-now    { background: #ff475720; border-color: #ff4757; color: #ff4757; }
+    .pri-btn.sel-later  { background: #ffa50220; border-color: #ffa502; color: #ffa502; }
+    .pri-icon { font-size: 14px; }
+
     .hidden { display: none !important; }
 
     /* ── SAVE STATUS ── */
@@ -347,7 +377,7 @@
 <body>
 
 <header class="header">
-  <span class="header-title">Trotten</span>
+  <span class="header-title">Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v6</span></span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
@@ -367,7 +397,7 @@
   </div>
   <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
 
-  <button class="btn btn-primary" onclick="openModal(null)">+ Lisää</button>
+  <button class="btn btn-success" onclick="openModal(null)">+ Lisää</button>
 </header>
 
 <div class="filter-panel hidden" id="filterPanel">
@@ -379,10 +409,9 @@
     <option value="done">Valmis</option>
   </select>
   <select class="fsel" id="fPriority" onchange="render()">
-    <option value="">Kaikki prioriteetit</option>
-    <option value="high">Korkea</option>
-    <option value="normal">Normaali</option>
-    <option value="low">Matala</option>
+    <option value="">Kaikki</option>
+    <option value="now">⚡ Nyt</option>
+    <option value="later">⏰ Myöhemmin</option>
   </select>
   <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
@@ -399,7 +428,14 @@
   </select>
 </div>
 
-<main class="main" id="main"></main>
+<div class="main" style="padding-bottom:0;padding-top:16px">
+  <div class="quick-capture">
+    <input type="text" id="quickInput" placeholder="Lisää projekti tai tehtävä... (Enter)"
+      onkeydown="if(event.key==='Enter')quickAdd(this)">
+    <span class="quick-capture-hint">Enter ↵</span>
+  </div>
+</div>
+<main class="main" style="padding-top:8px" id="main"></main>
 
 <!-- ── MODAL ── -->
 <div class="overlay hidden" id="overlay" onclick="overlayClick(event)">
@@ -424,12 +460,11 @@
 
     <div class="fr">
       <div class="fg">
-        <label class="fl">Prioriteetti</label>
-        <select class="fi" id="mPri">
-          <option value="normal">Normaali</option>
-          <option value="high">Korkea</option>
-          <option value="low">Matala</option>
-        </select>
+        <label class="fl">Kiireellisyys</label>
+        <div class="pri-toggle">
+          <button class="pri-btn" id="priNow"   onclick="setPri('now')"   title="Nyt">⚡</button>
+          <button class="pri-btn" id="priLater" onclick="setPri('later')" title="Myöhemmin">⏰</button>
+        </div>
       </div>
       <div class="fg">
         <label class="fl">Tila</label>
@@ -545,6 +580,7 @@ let projects = [];
 let view = 'list';
 let showArchive = false;
 let editingId = null;
+let mPriority = '';
 let mColor = '';
 let mSubs = [];
 let dragId = null;
@@ -731,7 +767,7 @@ function filtered(list) {
   return list.filter(p => {
     if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
     if (fs && p.status !== fs) return false;
-    if (fp && (p.priority||'normal') !== fp) return false;
+    if (fp && normPri(p.priority||'') !== fp) return false;
     if (fc && p.color !== fc) return false;
     if (fg && (p.group||'') !== fg) return false;
     if (fd) {
@@ -844,9 +880,9 @@ function card(p, mode) {
   const stPct   = stTotal > 0 ? Math.round(stDone/stTotal*100) : 0;
 
   let badges = '';
-  const pri = p.priority || 'normal';
-  if (pri === 'high') badges += `<span class="badge b-high">▲ Korkea</span>`;
-  if (pri === 'low')  badges += `<span class="badge b-low">▼ Matala</span>`;
+  const pri = normPri(p.priority || '');
+  if (pri === 'now')   badges += `<span class="pri-icon" title="Nyt">⚡</span>`;
+  if (pri === 'later') badges += `<span class="pri-icon" title="Myöhemmin">⏰</span>`;
   if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr}</span>`;
   if (mode !== 'kanban') {
     const sl = { todo: ['b-todo','Tekemättä'], inprogress: ['b-inprog','Työn alla'], done: ['b-done','Valmis'] };
@@ -970,6 +1006,40 @@ function del(id, e) {
 }
 function toggleArch() { showArchive = !showArchive; render(); }
 
+// ── PRIORITY ───────────────────────────────────────────────────────────────
+
+function normPri(v) {
+  if (v === 'high' || v === 'now')   return 'now';
+  if (v === 'low'  || v === 'later') return 'later';
+  return '';
+}
+
+function setPri(val) {
+  mPriority = mPriority === val ? '' : val;
+  renderPri();
+}
+
+function renderPri() {
+  document.getElementById('priNow').className   = 'pri-btn' + (mPriority === 'now'   ? ' sel-now'   : '');
+  document.getElementById('priLater').className = 'pri-btn' + (mPriority === 'later' ? ' sel-later' : '');
+}
+
+// ── QUICK ADD ──────────────────────────────────────────────────────────────
+
+function quickAdd(input) {
+  const title = input.value.trim();
+  if (!title) return;
+  const now = new Date().toISOString();
+  projects.unshift({
+    id: uid(), title, desc: '', priority: '', status: 'todo',
+    deadline: '', est: 0, logged: 0, color: '', group: '',
+    subs: [], archived: false, createdAt: now, updatedAt: now,
+  });
+  input.value = '';
+  save(); render();
+  input.focus();
+}
+
 function toggleFilterPanel() {
   const panel = document.getElementById('filterPanel');
   const btn   = document.getElementById('filterBtn');
@@ -1024,10 +1094,12 @@ function openModal(id, e) {
   const groups = [...new Set(projects.filter(x => x.group).map(x => x.group))];
   document.getElementById('groupList').innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
 
-  mColor = p ? (p.color||'') : '';
-  mSubs  = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
+  mColor    = p ? (p.color||'') : '';
+  mPriority = p ? normPri(p.priority||'') : '';
+  mSubs     = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
 
   renderCPicker();
+  renderPri();
   renderSubs();
 
   document.getElementById('overlay').classList.remove('hidden');
@@ -1055,7 +1127,7 @@ function saveProject() {
   const data = {
     title:    name,
     desc:     document.getElementById('mDesc').value.trim(),
-    priority: document.getElementById('mPri').value,
+    priority: mPriority,
     status:   document.getElementById('mStatus').value,
     deadline: document.getElementById('mDeadline').value,
     est:      parseFloat(document.getElementById('mEst').value)    || 0,
@@ -1239,6 +1311,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v4</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v6</div>
 </body>
 </html>
