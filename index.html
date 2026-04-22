@@ -463,11 +463,14 @@
       <p style="font-size:13px;color:var(--muted)">Sovellus luo uuden yksityisen Gistin automaattisesti.</p>
     </div>
     <div id="tabExistContent" class="hidden">
-      <div class="fg" style="margin-top:8px">
-        <label class="fl">Gist ID</label>
-        <input class="fi" id="setupGistId" type="text" placeholder="esim. a1b2c3d4e5f6...">
-        <p style="font-size:12px;color:var(--muted);margin-top:4px">Löydät ID:n Gistin URL-osoitteesta: gist.github.com/käyttäjä/<strong>ID</strong></p>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
+        <div class="fg" style="flex:1;margin-bottom:0">
+          <label class="fl">Gist ID</label>
+          <input class="fi" id="setupGistId" type="text" placeholder="esim. a1b2c3d4e5f6...">
+        </div>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="fetchGists()">Hae lista</button>
       </div>
+      <div id="gistList" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
     </div>
 
     <div style="margin-top:20px">
@@ -638,6 +641,36 @@ function setSetupStatus(msg, isErr = false) {
   const el = document.getElementById('setupStatus');
   el.textContent = msg;
   el.classList.toggle('err', isErr);
+}
+
+async function fetchGists() {
+  const token = document.getElementById('setupToken').value.trim();
+  if (!token) { setSetupStatus('Syötä token ensin.', true); return; }
+  setSetupStatus('Haetaan Gistejä...');
+  try {
+    const res = await fetch('https://api.github.com/gists?per_page=30', {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const gists = await res.json();
+    const trottenGists = gists.filter(g => g.files['trotten-data.json']);
+    const list = document.getElementById('gistList');
+    if (trottenGists.length === 0) {
+      list.innerHTML = '<p style="font-size:12px;color:var(--muted)">Ei trotten-data.json Gistejä löydy.</p>';
+    } else {
+      list.innerHTML = trottenGists.map(g =>
+        `<button class="btn btn-ghost btn-sm" style="text-align:left" onclick="selectGist('${g.id}')">
+          📄 ${g.description || 'Trotten data'} — <code style="font-size:11px">${g.id.slice(0,12)}...</code>
+        </button>`
+      ).join('');
+    }
+    setSetupStatus(`Löytyi ${trottenGists.length} Trotten-Gistiä.`);
+  } catch(e) { setSetupStatus('⚠ ' + e.message, true); }
+}
+
+function selectGist(id) {
+  document.getElementById('setupGistId').value = id;
+  setSetupStatus('Gist valittu — klikkaa Aloita →');
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
@@ -1129,5 +1162,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v4</div>
 </body>
 </html>
