@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trotten</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #22222f;
+      --border: #2a2a3a;
+      --text: #e0e0f0;
+      --muted: #7070a0;
+      --accent: #6c63ff;
+      --danger: #ff4757;
+      --success: #2ed573;
+      --warning: #ffa502;
+      --r: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .header-title { font-size: 17px; font-weight: 700; margin-right: 4px; }
+    .spacer { flex: 1; }
+
+    input[type="text"], input[type="number"], input[type="date"],
+    textarea, select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+    input[type="text"]:focus, input[type="number"]:focus,
+    input[type="date"]:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .search { padding: 7px 12px; font-size: 13px; width: 200px; }
+    .search::placeholder { color: var(--muted); }
+
+    .fsel { padding: 7px 10px; font-size: 13px; cursor: pointer; }
+
+    .view-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .view-toggle button {
+      padding: 6px 12px; background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 13px;
+    }
+    .view-toggle button.active { background: var(--accent); color: #fff; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 7px 14px; border-radius: var(--r); border: none;
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      transition: opacity .15s; white-space: nowrap;
+    }
+    .btn:hover { opacity: .82; }
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger   { background: var(--danger); color: #fff; }
+    .btn-sm       { padding: 4px 10px; font-size: 12px; }
+
+    /* ── MAIN ── */
+    .main { padding: 20px; }
+
+    /* List */
+    .list-view {
+      display: flex; flex-direction: column; gap: 8px;
+      max-width: 860px; margin: 0 auto;
+    }
+
+    /* Kanban */
+    .kanban-view {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    .k-col {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); min-height: 400px;
+    }
+    .k-col-head {
+      padding: 11px 14px; font-size: 13px; font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .k-count {
+      background: var(--surface2); border-radius: 99px;
+      padding: 2px 8px; font-size: 11px; color: var(--muted);
+    }
+    .k-cards {
+      padding: 8px; display: flex; flex-direction: column; gap: 8px;
+      min-height: 80px;
+    }
+    .k-cards.drag-over { background: rgba(108,99,255,.07); border-radius: var(--r); }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 11px 13px;
+      position: relative; user-select: none;
+      transition: border-color .15s;
+    }
+    .card:hover { border-color: #4a4a7a; }
+    .card.drag-over { border-color: var(--accent); background: var(--surface2); }
+    .card.dragging  { opacity: .45; }
+
+    .card-stripe {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; border-radius: var(--r) 0 0 var(--r);
+    }
+    .card-top {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding-left: 8px;
+    }
+    .card-cb { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+    .card-title { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
+    .card-title.done { text-decoration: line-through; color: var(--muted); }
+
+    .card-desc {
+      font-size: 12px; color: var(--muted); margin-top: 5px;
+      padding-left: 8px; line-height: 1.5;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    .card-badges {
+      display: flex; gap: 5px; flex-wrap: wrap;
+      margin-top: 7px; padding-left: 8px;
+    }
+    .badge {
+      font-size: 11px; padding: 2px 7px;
+      border-radius: 4px; font-weight: 500;
+    }
+    .b-high     { background: #ff475720; color: #ff6b77; }
+    .b-low      { background: #70707020; color: #909090; }
+    .b-dead     { background: #ffa50220; color: #ffa502; }
+    .b-overdue  { background: #ff475720; color: #ff4757; }
+    .b-todo     { background: #70707018; color: #888; }
+    .b-inprog   { background: #ffa50218; color: #ffa502; }
+    .b-done     { background: #2ed57318; color: #2ed573; }
+    .b-time     { background: #ffffff0d; color: #888; }
+
+    .subtask-bar { margin-top: 7px; padding-left: 8px; }
+    .sb-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .sb-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+    .sb-txt { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .card-actions {
+      display: flex; gap: 6px; margin-top: 9px; padding-left: 8px;
+    }
+
+    /* ── SECTION (archive) ── */
+    .section-bar {
+      display: flex; align-items: center; gap: 10px;
+      margin: 24px 0 12px; max-width: 860px; margin-left: auto; margin-right: auto;
+    }
+    .section-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+    .section-line { flex: 1; height: 1px; background: var(--border); }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; width: 100%; max-width: 560px;
+      max-height: 92vh; overflow-y: auto; padding: 24px;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+
+    .fg { margin-bottom: 14px; }
+    .fl {
+      font-size: 11px; color: var(--muted); margin-bottom: 5px;
+      display: block; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .fi { width: 100%; padding: 8px 11px; font-size: 14px; }
+    .fta { width: 100%; padding: 8px 11px; font-size: 14px; resize: vertical; min-height: 72px; }
+
+    .fr { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Color picker */
+    .cpicker { display: flex; gap: 7px; flex-wrap: wrap; }
+    .cswatch {
+      width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+      border: 2px solid transparent; transition: transform .12s;
+    }
+    .cswatch:hover { transform: scale(1.15); }
+    .cswatch.sel { border-color: #fff; }
+
+    /* Subtasks in modal */
+    .st-list { display: flex; flex-direction: column; gap: 5px; }
+    .st-item {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 6px 9px;
+    }
+    .st-cb  { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    .st-inp {
+      flex: 1; font-size: 13px; background: none; border: none;
+      color: var(--text); outline: none; font-family: inherit;
+    }
+    .st-inp.done { text-decoration: line-through; color: var(--muted); }
+    .st-del { color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; }
+    .st-del:hover { color: var(--danger); }
+
+    .st-add-row { display: flex; gap: 7px; margin-top: 7px; }
+    .st-add-inp { flex: 1; padding: 7px 10px; font-size: 13px; }
+
+    /* Logged time */
+    .log-row {
+      display: flex; align-items: center; gap: 7px;
+      margin-top: 5px; padding-left: 8px;
+    }
+    .log-inp { width: 64px; padding: 4px 7px; font-size: 12px; border-radius: 5px; border: 1px solid var(--border); color: var(--text); background: var(--surface2); outline: none; }
+    .log-inp:focus { border-color: var(--accent); }
+    .log-label { font-size: 12px; color: var(--muted); }
+
+    .modal-foot {
+      display: flex; gap: 8px; justify-content: flex-end;
+      margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 9px 15px;
+      font-size: 13px; z-index: 999;
+      animation: slideup .18s ease;
+    }
+    @keyframes slideup { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .empty { text-align: center; color: var(--muted); padding: 36px 20px; font-size: 14px; }
+
+    .group-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px;
+      color: var(--muted); padding: 6px 2px 4px; margin-top: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .group-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .b-group { background: #ffffff0d; color: var(--muted); font-size: 11px; }
+
+    .hidden { display: none !important; }
+
+    /* ── SAVE STATUS ── */
+    .save-status { font-size: 12px; color: var(--muted); margin-left: 4px; }
+    .save-status.err { color: var(--danger); }
+
+    /* ── SETUP OVERLAY ── */
+    .setup-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .setup-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; width: 100%; max-width: 500px; padding: 32px;
+    }
+    .setup-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .setup-box .sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .setup-steps {
+      background: var(--surface2); border-radius: var(--r);
+      padding: 14px 16px; margin-bottom: 20px; font-size: 13px; line-height: 2;
+    }
+    .setup-steps code {
+      background: #ffffff12; padding: 1px 6px; border-radius: 4px;
+      font-family: monospace; font-size: 12px;
+    }
+    .setup-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .setup-tab {
+      padding: 6px 14px; border-radius: var(--r); border: 1px solid var(--border);
+      background: none; color: var(--muted); cursor: pointer; font-size: 13px;
+    }
+    .setup-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .setup-status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 20px; }
+    .setup-status.err { color: var(--danger); }
+
+    @media (max-width: 700px) {
+      .kanban-view { grid-template-columns: 1fr; }
+      .fr { grid-template-columns: 1fr; }
+      .search { width: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <span class="header-title">Trotten</span>
+  <span class="save-status" id="saveStatus"></span>
+
+  <input class="search" id="qSearch" type="text" placeholder="Hae..." oninput="render()">
+
+  <select class="fsel" id="fStatus" onchange="render()">
+    <option value="">Kaikki tilat</option>
+    <option value="todo">Tekemättä</option>
+    <option value="inprogress">Työn alla</option>
+    <option value="done">Valmis</option>
+  </select>
+
+  <select class="fsel" id="fPriority" onchange="render()">
+    <option value="">Kaikki prioriteetit</option>
+    <option value="high">Korkea</option>
+    <option value="normal">Normaali</option>
+    <option value="low">Matala</option>
+  </select>
+
+  <select class="fsel" id="fColor" onchange="render()">
+    <option value="">Kaikki värit</option>
+  </select>
+
+  <select class="fsel" id="fDeadline" onchange="render()">
+    <option value="">Kaikki deadlinet</option>
+    <option value="overdue">Myöhässä</option>
+    <option value="today">Tänään</option>
+    <option value="week">Tällä viikolla</option>
+    <option value="nodate">Ei deadlinea</option>
+  </select>
+
+  <select class="fsel" id="fGroup" onchange="render()">
+    <option value="">Kaikki ryhmät</option>
+  </select>
+
+  <div class="spacer"></div>
+
+  <div class="view-toggle">
+    <button id="vList" class="active" onclick="setView('list')">☰ Lista</button>
+    <button id="vKanban" onclick="setView('kanban')">⊞ Kanban</button>
+  </div>
+
+  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('impFile').click()">Tuo JSON</button>
+  <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
+  <button class="btn btn-ghost btn-sm" onclick="exportJSON()">Vie JSON</button>
+
+  <button class="btn btn-primary" onclick="openModal(null)">+ Lisää</button>
+</header>
+
+<main class="main" id="main"></main>
+
+<!-- ── MODAL ── -->
+<div class="overlay hidden" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-title" id="mTitle">Uusi projekti</div>
+
+    <div class="fg">
+      <label class="fl">Nimi *</label>
+      <input class="fi" id="mName" type="text" placeholder="Projektin nimi">
+    </div>
+
+    <div class="fg">
+      <label class="fl">Ryhmä</label>
+      <input class="fi" id="mGroup" type="text" placeholder="esim. Stockman, Henkilökohtainen..." list="groupList">
+      <datalist id="groupList"></datalist>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Kuvaus / huomiot</label>
+      <textarea class="fta" id="mDesc" placeholder="Muistiinpanot, huomiot..."></textarea>
+    </div>
+
+    <div class="fr">
+      <div class="fg">
+        <label class="fl">Prioriteetti</label>
+        <select class="fi" id="mPri">
+          <option value="normal">Normaali</option>
+          <option value="high">Korkea</option>
+          <option value="low">Matala</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Tila</label>
+        <select class="fi" id="mStatus">
+          <option value="todo">Tekemättä</option>
+          <option value="inprogress">Työn alla</option>
+          <option value="done">Valmis</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fr">
+      <div class="fg">
+        <label class="fl">Deadline</label>
+        <input class="fi" id="mDeadline" type="date">
+      </div>
+      <div class="fg">
+        <label class="fl">Arvioitu aika (h)</label>
+        <input class="fi" id="mEst" type="number" placeholder="0" min="0" step="0.5">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Kirjattu aika (h)</label>
+      <input class="fi" id="mLogged" type="number" placeholder="0" min="0" step="0.5">
+    </div>
+
+    <div class="fg">
+      <label class="fl">Väri</label>
+      <div class="cpicker" id="cpicker"></div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Alatehtävät</label>
+      <div class="st-list" id="stList"></div>
+      <div class="st-add-row">
+        <input class="st-add-inp" id="stInput" type="text" placeholder="Lisää alatehtävä..."
+          onkeydown="if(event.key==='Enter'){addSt()}">
+        <button class="btn btn-ghost btn-sm" onclick="addSt()">+</button>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto">Arkistoi</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Peruuta</button>
+      <button class="btn btn-primary" onclick="saveProject()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SETUP ── -->
+<div class="setup-overlay hidden" id="setupOverlay">
+  <div class="setup-box">
+    <h2>Tervetuloa Trotteniin</h2>
+    <p class="sub">Tarvitset GitHub Personal Access Tokenin datan tallennukseen Gistiin.</p>
+
+    <div class="setup-steps">
+      1. Mene <code>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</code><br>
+      2. Klikkaa <code>Generate new token (classic)</code><br>
+      3. Valitse scope: <code>☑ gist</code> — ei muuta<br>
+      4. Kopioi token ja liitä alle
+    </div>
+
+    <div class="fg">
+      <label class="fl">GitHub Token</label>
+      <input class="fi" id="setupToken" type="password" placeholder="ghp_...">
+    </div>
+
+    <div class="setup-tabs">
+      <button class="setup-tab active" id="tabNew" onclick="switchTab('new')">Uusi Gist</button>
+      <button class="setup-tab" id="tabExist" onclick="switchTab('exist')">Yhdistä olemassa olevaan</button>
+    </div>
+
+    <div id="tabNewContent">
+      <p style="font-size:13px;color:var(--muted)">Sovellus luo uuden yksityisen Gistin automaattisesti.</p>
+    </div>
+    <div id="tabExistContent" class="hidden">
+      <div class="fg" style="margin-top:8px">
+        <label class="fl">Gist ID</label>
+        <input class="fi" id="setupGistId" type="text" placeholder="esim. a1b2c3d4e5f6...">
+        <p style="font-size:12px;color:var(--muted);margin-top:4px">Löydät ID:n Gistin URL-osoitteesta: gist.github.com/käyttäjä/<strong>ID</strong></p>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <button class="btn btn-primary" onclick="doSetup()">Aloita →</button>
+    </div>
+    <p class="setup-status" id="setupStatus"></p>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+
+const COLORS = [
+  { name: 'Ei väriä',  hex: '' },
+  { name: 'Punainen',  hex: '#ff4757' },
+  { name: 'Oranssi',   hex: '#ff6b35' },
+  { name: 'Keltainen', hex: '#ffa502' },
+  { name: 'Vihreä',    hex: '#2ed573' },
+  { name: 'Sininen',   hex: '#1e90ff' },
+  { name: 'Violetti',  hex: '#6c63ff' },
+  { name: 'Pinkki',    hex: '#ff6b9d' },
+  { name: 'Syaani',    hex: '#00d2d3' },
+  { name: 'Harmaa',    hex: '#747d8c' },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+
+let projects = [];
+let view = 'list';
+let showArchive = false;
+let editingId = null;
+let mColor = '';
+let mSubs = [];
+let dragId = null;
+
+// ── GIST STORAGE ───────────────────────────────────────────────────────────
+
+const CFG_KEY  = 'trotten_cfg';
+const FILENAME = 'trotten-data.json';
+let cfg = { token: '', gistId: '' };
+let saveTimer = null;
+let setupTab  = 'new';
+
+function loadCfg() {
+  try { const r = localStorage.getItem(CFG_KEY); if (r) cfg = JSON.parse(r); } catch(e) {}
+}
+function saveCfg() {
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch(e) {}
+}
+
+function gistHeaders() {
+  return {
+    'Authorization': `Bearer ${cfg.token}`,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json',
+  };
+}
+
+async function loadFromGist() {
+  setStatus('Ladataan...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, { headers: gistHeaders() });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const content = data.files[FILENAME]?.content;
+    if (content) {
+      const parsed = JSON.parse(content);
+      projects = parsed.projects || [];
+      view     = parsed.view    || 'list';
+    }
+    setStatus('');
+  } catch(e) {
+    setStatus('⚠ Latausvirhe', true);
+  }
+}
+
+function triggerSave() {
+  clearTimeout(saveTimer);
+  setStatus('Tallennetaan...');
+  saveTimer = setTimeout(doSave, 1500);
+}
+
+async function doSave() {
+  try {
+    const content = JSON.stringify({ projects, view }, null, 2);
+    const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+      method: 'PATCH',
+      headers: gistHeaders(),
+      body: JSON.stringify({ files: { [FILENAME]: { content } } }),
+    });
+    if (!res.ok) throw new Error(res.status);
+    setStatus('✓');
+    setTimeout(() => setStatus(''), 2000);
+  } catch(e) {
+    setStatus('⚠ Tallennusvirhe', true);
+  }
+}
+
+function setStatus(msg, isErr = false) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('err', isErr);
+}
+
+// ── SETUP ──────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  setupTab = tab;
+  document.getElementById('tabNew').classList.toggle('active', tab === 'new');
+  document.getElementById('tabExist').classList.toggle('active', tab === 'exist');
+  document.getElementById('tabNewContent').classList.toggle('hidden', tab !== 'new');
+  document.getElementById('tabExistContent').classList.toggle('hidden', tab !== 'exist');
+}
+
+async function doSetup() {
+  const token = document.getElementById('setupToken').value.trim();
+  if (!token) { setSetupStatus('Syötä token ensin.', true); return; }
+
+  if (setupTab === 'exist') {
+    const gistId = document.getElementById('setupGistId').value.trim();
+    if (!gistId) { setSetupStatus('Syötä Gist ID.', true); return; }
+    setSetupStatus('Tarkistetaan...');
+    try {
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (!res.ok) throw new Error('Gist ei löydy tai token virheellinen');
+      cfg = { token, gistId };
+      saveCfg();
+      finishSetup();
+    } catch(e) { setSetupStatus('⚠ ' + e.message, true); }
+  } else {
+    setSetupStatus('Luodaan Gist...');
+    try {
+      const res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: 'Trotten data',
+          public: false,
+          files: { [FILENAME]: { content: JSON.stringify({ projects: [], view: 'list' }) } },
+        }),
+      });
+      if (!res.ok) throw new Error('Token virheellinen tai ei gist-oikeuksia');
+      const data = await res.json();
+      cfg = { token, gistId: data.id };
+      saveCfg();
+      setSetupStatus(`Gist luotu! ID: ${data.id}`);
+      setTimeout(finishSetup, 800);
+    } catch(e) { setSetupStatus('⚠ ' + e.message, true); }
+  }
+}
+
+function finishSetup() {
+  document.getElementById('setupOverlay').classList.add('hidden');
+  loadFromGist().then(() => {
+    document.getElementById('vList').classList.toggle('active', view === 'list');
+    document.getElementById('vKanban').classList.toggle('active', view === 'kanban');
+    render();
+  });
+}
+
+function setSetupStatus(msg, isErr = false) {
+  const el = document.getElementById('setupStatus');
+  el.textContent = msg;
+  el.classList.toggle('err', isErr);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// ── FILTERS ───────────────────────────────────────────────────────────────
+
+function filtered(list) {
+  const q  = document.getElementById('qSearch').value.trim().toLowerCase();
+  const fs = document.getElementById('fStatus').value;
+  const fp = document.getElementById('fPriority').value;
+  const fc = document.getElementById('fColor').value;
+  const fd = document.getElementById('fDeadline').value;
+  const fg = document.getElementById('fGroup').value;
+  const today = dayStart(new Date());
+
+  return list.filter(p => {
+    if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
+    if (fs && p.status !== fs) return false;
+    if (fp && (p.priority||'normal') !== fp) return false;
+    if (fc && p.color !== fc) return false;
+    if (fg && (p.group||'') !== fg) return false;
+    if (fd) {
+      const d = p.deadline ? dayStart(new Date(p.deadline)) : null;
+      if (fd === 'overdue') { if (!d || d >= today) return false; }
+      else if (fd === 'today') { if (!d || d.getTime() !== today.getTime()) return false; }
+      else if (fd === 'week') {
+        const w = new Date(today); w.setDate(w.getDate() + 7);
+        if (!d || d < today || d > w) return false;
+      } else if (fd === 'nodate') { if (p.deadline) return false; }
+    }
+    return true;
+  });
+}
+
+function dayStart(d) { d.setHours(0,0,0,0); return d; }
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+
+function setView(v) {
+  view = v;
+  triggerSave();
+  document.getElementById('vList').classList.toggle('active', v === 'list');
+  document.getElementById('vKanban').classList.toggle('active', v === 'kanban');
+  render();
+}
+
+function render() {
+  const active   = projects.filter(p => !p.archived);
+  const archived = projects.filter(p => p.archived);
+  const fActive  = filtered(active);
+  let html = '';
+
+  if (view === 'list') {
+    html += '<div class="list-view" id="listView">';
+    if (fActive.length === 0) {
+      html += '<div class="empty">Ei projekteja. Lisää uusi klikkaamalla "+ Lisää".</div>';
+    } else {
+      const hasGroups = fActive.some(p => p.group);
+      if (!hasGroups) {
+        fActive.forEach(p => { html += card(p, 'list'); });
+      } else {
+        const ungrouped = fActive.filter(p => !p.group);
+        ungrouped.forEach(p => { html += card(p, 'list'); });
+        const groups = [...new Set(fActive.filter(p => p.group).map(p => p.group))];
+        groups.forEach(g => {
+          html += `<div class="group-header">${esc(g)}</div>`;
+          fActive.filter(p => p.group === g).forEach(p => { html += card(p, 'list'); });
+        });
+      }
+    }
+    html += '</div>';
+  } else {
+    const cols = [
+      { key: 'todo',       label: 'Tekemättä', dot: '#747d8c' },
+      { key: 'inprogress', label: 'Työn alla',  dot: '#ffa502' },
+      { key: 'done',       label: 'Valmis',      dot: '#2ed573' },
+    ];
+    html += '<div class="kanban-view">';
+    cols.forEach(c => {
+      const items = fActive.filter(p => p.status === c.key);
+      html += `<div class="k-col"
+        ondragover="kbOver(event,'${c.key}')"
+        ondrop="kbDrop(event,'${c.key}')"
+        ondragleave="kbLeave(event)">
+        <div class="k-col-head">
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};display:inline-block"></span>
+            ${c.label}
+          </span>
+          <span class="k-count">${items.length}</span>
+        </div>
+        <div class="k-cards" id="kc-${c.key}">`;
+      if (items.length === 0) html += '<div class="empty" style="padding:20px;font-size:13px">Tyhjä</div>';
+      else items.forEach(p => { html += card(p, 'kanban'); });
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Archive
+  if (archived.length > 0) {
+    const fa = filtered(archived);
+    html += `<div class="section-bar">
+      <span class="section-label">Arkisto (${archived.length})</span>
+      <div class="section-line"></div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleArch()">${showArchive ? 'Piilota' : 'Näytä'}</button>
+    </div>`;
+    if (showArchive) {
+      html += '<div class="list-view" style="margin-top:0">';
+      if (fa.length === 0) html += '<div class="empty">Ei hakutuloksia arkistossa.</div>';
+      else fa.forEach(p => { html += card(p, 'archive'); });
+      html += '</div>';
+    }
+  }
+
+  document.getElementById('main').innerHTML = html;
+  refreshColorFilter();
+  refreshGroupFilter();
+}
+
+function card(p, mode) {
+  const today = dayStart(new Date());
+  const dl    = p.deadline ? dayStart(new Date(p.deadline)) : null;
+  const over  = dl && dl < today && p.status !== 'done';
+  const dlStr = dl ? dl.toLocaleDateString('fi-FI') : null;
+
+  const stDone  = (p.subs||[]).filter(s => s.done).length;
+  const stTotal = (p.subs||[]).length;
+  const stPct   = stTotal > 0 ? Math.round(stDone/stTotal*100) : 0;
+
+  let badges = '';
+  const pri = p.priority || 'normal';
+  if (pri === 'high') badges += `<span class="badge b-high">▲ Korkea</span>`;
+  if (pri === 'low')  badges += `<span class="badge b-low">▼ Matala</span>`;
+  if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr}</span>`;
+  if (mode !== 'kanban') {
+    const sl = { todo: ['b-todo','Tekemättä'], inprogress: ['b-inprog','Työn alla'], done: ['b-done','Valmis'] };
+    const [cls, lbl] = sl[p.status||'todo'] || sl.todo;
+    badges += `<span class="badge ${cls}">${lbl}</span>`;
+  }
+  if (p.est) {
+    const lg = p.logged || 0;
+    badges += `<span class="badge b-time">⏱ ${lg}/${p.est}h</span>`;
+  }
+  if (p.group && mode === 'kanban') {
+    badges += `<span class="badge b-group">📁 ${esc(p.group)}</span>`;
+  }
+
+  const tCls = p.status === 'done' ? 'card-title done' : 'card-title';
+  const drag = mode !== 'archive' ? `draggable="true" ondragstart="dStart(event,'${p.id}')" ondragend="dEnd(event)"` : '';
+  const dov  = mode !== 'archive' ? `ondragover="cOver(event,'${p.id}')" ondrop="cDrop(event,'${p.id}')"` : '';
+
+  let actions = '';
+  if (mode === 'archive') {
+    actions = `<div class="card-actions">
+      <button class="btn btn-ghost btn-sm" onclick="unarch('${p.id}',event)">Palauta</button>
+      <button class="btn btn-danger btn-sm" onclick="del('${p.id}',event)">Poista</button>
+    </div>`;
+  } else {
+    actions = `<div class="card-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)">Muokkaa</button>
+      ${p.status !== 'done' ? `<button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)">✓ Valmis</button>` : ''}
+    </div>`;
+  }
+
+  return `<div class="card" id="c-${p.id}" ${drag} ${dov}>
+    ${p.color ? `<div class="card-stripe" style="background:${p.color}"></div>` : ''}
+    <div class="card-top">
+      ${mode !== 'archive' ? `<input type="checkbox" class="card-cb" ${p.status==='done'?'checked':''} onclick="togDone('${p.id}',event)" title="Merkitse valmiiksi">` : ''}
+      <div class="${tCls}">${esc(p.title)}</div>
+    </div>
+    ${p.desc ? `<div class="card-desc">${esc(p.desc)}</div>` : ''}
+    ${badges ? `<div class="card-badges">${badges}</div>` : ''}
+    ${stTotal > 0 ? `<div class="subtask-bar">
+      <div class="sb-bg"><div class="sb-fill" style="width:${stPct}%"></div></div>
+      <div class="sb-txt">${stDone}/${stTotal} alatehtävää</div>
+    </div>` : ''}
+    ${actions}
+  </div>`;
+}
+
+// ── DRAG & DROP ────────────────────────────────────────────────────────────
+
+function dStart(e, id) {
+  dragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { const el = document.getElementById('c-'+id); if(el) el.classList.add('dragging'); }, 0);
+}
+function dEnd(e) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('dragging','drag-over'));
+  document.querySelectorAll('.k-cards').forEach(c => c.classList.remove('drag-over'));
+  dragId = null;
+}
+function cOver(e, id) {
+  if (!dragId || dragId === id) return;
+  e.preventDefault();
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+  const el = document.getElementById('c-'+id);
+  if (el) el.classList.add('drag-over');
+}
+function cDrop(e, targetId) {
+  e.preventDefault(); e.stopPropagation();
+  if (!dragId || dragId === targetId) return;
+  const fi = projects.findIndex(p => p.id === dragId);
+  const ti = projects.findIndex(p => p.id === targetId);
+  if (fi < 0 || ti < 0) return;
+  const [m] = projects.splice(fi, 1);
+  // In kanban, adopt target status
+  if (view === 'kanban') {
+    const tgt = projects.find(p => p.id === targetId);
+    if (tgt) m.status = tgt.status;
+  }
+  projects.splice(ti, 0, m);
+  triggerSave(); render();
+}
+function kbOver(e, status) {
+  e.preventDefault();
+  const col = document.getElementById('kc-'+status);
+  if (col) col.classList.add('drag-over');
+}
+function kbLeave(e) {
+  document.querySelectorAll('.k-cards').forEach(c => c.classList.remove('drag-over'));
+}
+function kbDrop(e, status) {
+  e.preventDefault();
+  document.querySelectorAll('.k-cards').forEach(c => c.classList.remove('drag-over'));
+  if (!dragId) return;
+  if (e.target.closest('.card')) return;
+  const p = projects.find(x => x.id === dragId);
+  if (p) { p.status = status; triggerSave(); render(); }
+}
+
+// ── PROJECT ACTIONS ────────────────────────────────────────────────────────
+
+function togDone(id, e) {
+  e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (p) { p.status = p.status === 'done' ? 'todo' : 'done'; triggerSave(); render(); }
+}
+function qDone(id, e) {
+  e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (p) { p.status = 'done'; triggerSave(); render(); toast('Valmis!'); }
+}
+function unarch(id, e) {
+  e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (p) { p.archived = false; triggerSave(); render(); toast('Palautettu!'); }
+}
+function del(id, e) {
+  e.stopPropagation();
+  if (!confirm('Poista projekti pysyvästi?')) return;
+  projects = projects.filter(x => x.id !== id);
+  triggerSave(); render(); toast('Poistettu!');
+}
+function toggleArch() { showArchive = !showArchive; render(); }
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+
+function openModal(id, e) {
+  if (e) e.stopPropagation();
+  editingId = id || null;
+  const p = id ? projects.find(x => x.id === id) : null;
+
+  document.getElementById('mTitle').textContent = p ? 'Muokkaa projektia' : 'Uusi projekti';
+  document.getElementById('mName').value     = p ? p.title : '';
+  document.getElementById('mDesc').value     = p ? (p.desc||'') : '';
+  document.getElementById('mPri').value      = p ? (p.priority||'normal') : 'normal';
+  document.getElementById('mStatus').value   = p ? (p.status||'todo') : 'todo';
+  document.getElementById('mDeadline').value = p ? (p.deadline||'') : '';
+  document.getElementById('mEst').value      = p ? (p.est||'') : '';
+  document.getElementById('mLogged').value   = p ? (p.logged||'') : '';
+  document.getElementById('mArchBtn').style.display = p ? '' : 'none';
+  document.getElementById('mGroup').value = p ? (p.group||'') : '';
+
+  // populate datalist with existing groups
+  const groups = [...new Set(projects.filter(x => x.group).map(x => x.group))];
+  document.getElementById('groupList').innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
+
+  mColor = p ? (p.color||'') : '';
+  mSubs  = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
+
+  renderCPicker();
+  renderSubs();
+
+  document.getElementById('overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('mName').focus(), 30);
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('stInput').value = '';
+  editingId = null;
+}
+
+function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+function saveProject() {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) {
+    document.getElementById('mName').style.borderColor = 'var(--danger)';
+    setTimeout(() => document.getElementById('mName').style.borderColor = '', 1500);
+    return;
+  }
+  const now = new Date().toISOString();
+  const data = {
+    title:    name,
+    desc:     document.getElementById('mDesc').value.trim(),
+    priority: document.getElementById('mPri').value,
+    status:   document.getElementById('mStatus').value,
+    deadline: document.getElementById('mDeadline').value,
+    est:      parseFloat(document.getElementById('mEst').value)    || 0,
+    logged:   parseFloat(document.getElementById('mLogged').value) || 0,
+    group:    document.getElementById('mGroup').value.trim(),
+    color:    mColor,
+    subs:     mSubs,
+    updatedAt: now,
+  };
+  if (editingId) {
+    const i = projects.findIndex(x => x.id === editingId);
+    if (i >= 0) projects[i] = { ...projects[i], ...data };
+  } else {
+    projects.unshift({ id: uid(), archived: false, createdAt: now, ...data });
+  }
+  triggerSave(); render(); closeModal();
+  toast(editingId ? 'Tallennettu!' : 'Lisätty!');
+}
+
+function archiveCur() {
+  const p = projects.find(x => x.id === editingId);
+  if (p) { p.archived = true; triggerSave(); render(); closeModal(); toast('Arkistoitu!'); }
+}
+
+// ── COLOR PICKER ───────────────────────────────────────────────────────────
+
+function renderCPicker() {
+  document.getElementById('cpicker').innerHTML = COLORS.map(c =>
+    `<div class="cswatch ${mColor===c.hex?'sel':''}"
+      style="background:${c.hex||'#2a2a3a'};border-color:${c.hex||'#2a2a3a'}"
+      title="${c.name}" onclick="pickColor('${c.hex}')"></div>`
+  ).join('');
+}
+function pickColor(hex) { mColor = hex; renderCPicker(); }
+
+function refreshColorFilter() {
+  const sel = document.getElementById('fColor');
+  const cur = sel.value;
+  const used = [...new Set(projects.filter(p=>p.color).map(p=>p.color))];
+  sel.innerHTML = '<option value="">Kaikki värit</option>' +
+    used.map(h => {
+      const nm = COLORS.find(c=>c.hex===h)?.name || h;
+      return `<option value="${h}" ${cur===h?'selected':''}>${nm}</option>`;
+    }).join('');
+}
+
+function refreshGroupFilter() {
+  const sel = document.getElementById('fGroup');
+  const cur = sel.value;
+  const groups = [...new Set(projects.filter(p=>p.group).map(p=>p.group))].sort();
+  sel.innerHTML = '<option value="">Kaikki ryhmät</option>' +
+    groups.map(g => `<option value="${esc(g)}" ${cur===g?'selected':''}>${esc(g)}</option>`).join('');
+}
+
+// ── SUBTASKS ───────────────────────────────────────────────────────────────
+
+function renderSubs() {
+  document.getElementById('stList').innerHTML = mSubs.map((s,i) =>
+    `<div class="st-item">
+      <input type="checkbox" class="st-cb" ${s.done?'checked':''} onchange="togSub(${i})">
+      <input type="text" class="st-inp ${s.done?'done':''}" value="${esc(s.title)}"
+        oninput="updSub(${i},this.value)"
+        onkeydown="if(event.key==='Enter'){document.getElementById('stInput').focus()}">
+      <span class="st-del" onclick="rmSub(${i})">×</span>
+    </div>`
+  ).join('');
+}
+function addSt() {
+  const inp = document.getElementById('stInput');
+  const v = inp.value.trim(); if (!v) return;
+  mSubs.push({ id: uid(), title: v, done: false });
+  inp.value = ''; renderSubs(); inp.focus();
+}
+function togSub(i) { mSubs[i].done = !mSubs[i].done; renderSubs(); }
+function updSub(i, v) { mSubs[i].title = v; }
+function rmSub(i)  { mSubs.splice(i,1); renderSubs(); }
+
+// ── IMPORT / EXPORT ────────────────────────────────────────────────────────
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({ projects }, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `projektit-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Viety!');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      let incoming = [];
+      if (d.projects && Array.isArray(d.projects)) {
+        // Trotten native format
+        incoming = d.projects;
+      } else if (d.todos && Array.isArray(d.todos)) {
+        // todo.json format — convert to Trotten projects
+        const now = new Date().toISOString();
+        const priMap = { high: 'high', medium: 'normal', low: 'low', normal: 'normal' };
+        incoming = d.todos.map(t => ({
+          id:        uid(),
+          title:     t.title || '(nimetön)',
+          desc:      t.details || '',
+          priority:  priMap[t.priority] || 'normal',
+          status:    t.done ? 'done' : 'todo',
+          group:     d.project || '',
+          deadline:  '',
+          est:       0,
+          logged:    0,
+          color:     '',
+          subs:      [],
+          archived:  false,
+          createdAt: now,
+          updatedAt: now,
+        }));
+      } else {
+        throw new Error();
+      }
+      if (confirm(`Tuodaan ${incoming.length} projektia. Korvataanko nykyiset tiedot?\n\nOK = korvaa, Peruuta = yhdistä (lisää uudet)`)) {
+        projects = incoming;
+        toast(`Ladattu ${incoming.length} projektia!`);
+      } else {
+        const ids = new Set(projects.map(p => p.id));
+        const news = incoming.filter(p => !ids.has(p.id));
+        projects.push(...news);
+        toast(`Lisätty ${news.length} uutta projektia!`);
+      }
+      triggerSave(); render();
+    } catch { alert('Virheellinen JSON-tiedosto.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────────
+// N = uusi projekti, Esc = sulje modal, Ctrl+Enter = tallenna
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey
+      && document.activeElement === document.body) {
+    openModal(null); return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (!document.getElementById('overlay').classList.contains('hidden')) {
+      saveProject();
+    }
+  }
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+
+loadCfg();
+if (!cfg.token || !cfg.gistId) {
+  document.getElementById('setupOverlay').classList.remove('hidden');
+} else {
+  loadFromGist().then(() => {
+    document.getElementById('vList').classList.toggle('active', view === 'list');
+    document.getElementById('vKanban').classList.toggle('active', view === 'kanban');
+    render();
+  });
+}
+</script>
+</body>
+</html>
