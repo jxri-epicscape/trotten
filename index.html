@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trotten</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -281,16 +282,43 @@
       font-size: 12px; color: #3a3a50; padding-right: 14px; white-space: nowrap;
     }
 
+    /* ── LUCIDE ICONS ── */
+    i[data-lucide], i[data-lucide] svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+
     /* ── PRIORITY TOGGLE ── */
     .pri-toggle { display: flex; gap: 8px; }
     .pri-btn {
-      padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--border);
+      padding: 8px 14px; border-radius: var(--r); border: 1px solid var(--border);
       background: var(--surface2); color: var(--muted); cursor: pointer;
-      font-size: 16px; transition: all .15s;
+      display: flex; align-items: center; gap: 6px; font-size: 13px;
+      transition: all .15s;
     }
     .pri-btn.sel-now    { background: #ff475720; border-color: #ff4757; color: #ff4757; }
     .pri-btn.sel-later  { background: #ffa50220; border-color: #ffa502; color: #ffa502; }
-    .pri-icon { font-size: 14px; }
+    .pri-icon { display: inline-flex; align-items: center; }
+
+    /* ── CATEGORY PICKER ── */
+    .cat-picker { display: flex; gap: 7px; flex-wrap: wrap; }
+    .cat-btn {
+      width: 38px; height: 38px; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; transition: all .15s;
+    }
+    .cat-btn:hover { border-color: var(--accent); color: var(--text); }
+    .cat-btn.sel   { border-color: var(--accent); background: rgba(108,99,255,.18); color: var(--accent); }
+    .cat-btn i[data-lucide] svg { width: 18px; height: 18px; }
+
+    /* ── CAT FILTER BUTTONS ── */
+    .cat-filter { display: flex; gap: 5px; flex-wrap: wrap; }
+    .cat-filter-btn {
+      width: 32px; height: 32px; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; transition: all .15s;
+    }
+    .cat-filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,.18); }
+    .cat-filter-btn i[data-lucide] svg { width: 15px; height: 15px; }
 
     .hidden { display: none !important; }
 
@@ -377,11 +405,14 @@
 <body>
 
 <header class="header">
-  <span class="header-title">Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v7</span></span>
+  <span class="header-title" style="display:flex;align-items:center;gap:7px">
+    <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v9</span>
+  </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
-  <button class="btn btn-ghost btn-sm" id="filterBtn" onclick="toggleFilterPanel()">Hae ▾</button>
+  <button class="btn btn-ghost btn-icon" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="eye"></i></button>
 
   <div class="view-toggle">
     <button id="vList" class="active" onclick="setView('list')" title="Lista">☰</button>
@@ -416,16 +447,7 @@
   <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
   </select>
-  <select class="fsel" id="fDeadline" onchange="render()">
-    <option value="">Kaikki deadlinet</option>
-    <option value="overdue">Myöhässä</option>
-    <option value="today">Tänään</option>
-    <option value="week">Tällä viikolla</option>
-    <option value="nodate">Ei deadlinea</option>
-  </select>
-  <select class="fsel" id="fGroup" onchange="render()">
-    <option value="">Kaikki ryhmät</option>
-  </select>
+  <div class="cat-filter" id="catFilter"></div>
 </div>
 
 <div class="main" style="padding-bottom:0;padding-top:16px">
@@ -448,9 +470,8 @@
     </div>
 
     <div class="fg">
-      <label class="fl">Ryhmä</label>
-      <input class="fi" id="mGroup" type="text" placeholder="esim. Stockman, Henkilökohtainen..." list="groupList">
-      <datalist id="groupList"></datalist>
+      <label class="fl">Kategoria</label>
+      <div class="cat-picker" id="catPicker"></div>
     </div>
 
     <div class="fg">
@@ -462,8 +483,8 @@
       <div class="fg">
         <label class="fl">Kiireellisyys</label>
         <div class="pri-toggle">
-          <button class="pri-btn" id="priNow"   onclick="setPri('now')"   title="Nyt">⚡</button>
-          <button class="pri-btn" id="priLater" onclick="setPri('later')" title="Myöhemmin">⏰</button>
+          <button class="pri-btn" id="priNow"   onclick="setPri('now')"   title="Nyt"><i data-lucide="zap"></i> Nyt</button>
+          <button class="pri-btn" id="priLater" onclick="setPri('later')" title="Myöhemmin"><i data-lucide="clock"></i> Myöh.</button>
         </div>
       </div>
       <div class="fg">
@@ -513,7 +534,7 @@
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto">Arkistoi</button>
       <button class="btn btn-ghost" onclick="closeModal()">Peruuta</button>
-      <button class="btn btn-primary" onclick="saveProject()">Tallenna</button>
+      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="bookmark-plus"></i> Tallenna</button>
     </div>
   </div>
 </div>
@@ -566,13 +587,14 @@
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 
 const COLORS = [
-  { name: 'Ei väriä',  hex: '' },
   { name: 'Punainen',  hex: '#ff4757' },
   { name: 'Keltainen', hex: '#ffa502' },
   { name: 'Vihreä',    hex: '#2ed573' },
   { name: 'Sininen',   hex: '#1e90ff' },
   { name: 'Violetti',  hex: '#6c63ff' },
 ];
+
+const CATEGORIES = ['cannabis','command','hand-metal','type-outline','search-alert','shapes','lamp-desk'];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 
@@ -581,6 +603,8 @@ let view = 'list';
 let showArchive = false;
 let editingId = null;
 let mPriority = '';
+let mCategory = '';
+let fCategory  = '';
 let mColor = '';
 let mSubs = [];
 let dragId = null;
@@ -760,25 +784,12 @@ function filtered(list) {
   const fs = document.getElementById('fStatus').value;
   const fp = document.getElementById('fPriority').value;
   const fc = document.getElementById('fColor').value;
-  const fd = document.getElementById('fDeadline').value;
-  const fg = document.getElementById('fGroup').value;
-  const today = dayStart(new Date());
-
   return list.filter(p => {
     if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
     if (fs && p.status !== fs) return false;
     if (fp && normPri(p.priority||'') !== fp) return false;
     if (fc && p.color !== fc) return false;
-    if (fg && (p.group||'') !== fg) return false;
-    if (fd) {
-      const d = p.deadline ? dayStart(new Date(p.deadline)) : null;
-      if (fd === 'overdue') { if (!d || d >= today) return false; }
-      else if (fd === 'today') { if (!d || d.getTime() !== today.getTime()) return false; }
-      else if (fd === 'week') {
-        const w = new Date(today); w.setDate(w.getDate() + 7);
-        if (!d || d < today || d > w) return false;
-      } else if (fd === 'nodate') { if (p.deadline) return false; }
-    }
+    if (fCategory && (p.group||'') !== fCategory) return false;
     return true;
   });
 }
@@ -866,7 +877,8 @@ function render() {
 
   document.getElementById('main').innerHTML = html;
   refreshColorFilter();
-  refreshGroupFilter();
+  refreshCatFilter();
+  lucide.createIcons();
 }
 
 function card(p, mode) {
@@ -881,9 +893,10 @@ function card(p, mode) {
 
   let badges = '';
   const pri = normPri(p.priority || '');
-  if (pri === 'now')   badges += `<span class="pri-icon" title="Nyt">⚡</span>`;
-  if (pri === 'later') badges += `<span class="pri-icon" title="Myöhemmin">⏰</span>`;
-  if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr}</span>`;
+  if (pri === 'now')   badges += `<span class="pri-icon" title="Nyt"><i data-lucide="zap"></i></span>`;
+  if (pri === 'later') badges += `<span class="pri-icon" title="Myöhemmin"><i data-lucide="clock"></i></span>`;
+  if (p.group) badges += `<span class="pri-icon" title="${esc(p.group)}"><i data-lucide="${esc(p.group)}"></i></span>`;
+  if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr} ${countdown(dl, today)}</span>`;
   if (mode !== 'kanban') {
     const sl = { todo: ['b-todo','Tekemättä'], inprogress: ['b-inprog','Työn alla'], done: ['b-done','Valmis'] };
     const [cls, lbl] = sl[p.status||'todo'] || sl.todo;
@@ -909,7 +922,7 @@ function card(p, mode) {
     </div>`;
   } else {
     actions = `<div class="card-actions">
-      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)">Muokkaa</button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
       ${p.status !== 'done' ? `<button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)">✓ Valmis</button>` : ''}
     </div>`;
   }
@@ -1008,6 +1021,17 @@ function toggleArch() { showArchive = !showArchive; render(); }
 
 // ── PRIORITY ───────────────────────────────────────────────────────────────
 
+function countdown(dl, today) {
+  const diff = Math.round((dl - today) / 86400000);
+  if (diff === 0)  return '· tänään';
+  if (diff === 1)  return '· huomenna';
+  if (diff === -1) return '· eilen';
+  if (diff < 0)   return `· ${Math.abs(diff)} pv sitten`;
+  if (diff < 14)  return `· ${diff} pv`;
+  if (diff < 60)  return `· ${Math.round(diff/7)} vk`;
+  return `· ${Math.round(diff/30)} kk`;
+}
+
 function normPri(v) {
   if (v === 'high' || v === 'now')   return 'now';
   if (v === 'low'  || v === 'later') return 'later';
@@ -1022,6 +1046,22 @@ function setPri(val) {
 function renderPri() {
   document.getElementById('priNow').className   = 'pri-btn' + (mPriority === 'now'   ? ' sel-now'   : '');
   document.getElementById('priLater').className = 'pri-btn' + (mPriority === 'later' ? ' sel-later' : '');
+}
+
+function setCat(cat) {
+  mCategory = mCategory === cat ? '' : cat;
+  renderCatPicker();
+}
+
+function renderCatPicker() {
+  const el = document.getElementById('catPicker');
+  if (!el) return;
+  el.innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-btn${mCategory===c?' sel':''}" onclick="setCat('${c}')" title="${c}">
+      <i data-lucide="${c}"></i>
+    </button>`
+  ).join('');
+  lucide.createIcons();
 }
 
 // ── QUICK ADD ──────────────────────────────────────────────────────────────
@@ -1045,8 +1085,7 @@ function toggleFilterPanel() {
   const panel = document.getElementById('filterPanel');
   const btn   = document.getElementById('filterBtn');
   const open  = panel.classList.toggle('hidden') === false;
-  btn.classList.toggle('filter-active', hasActiveFilters());
-  btn.textContent = open ? 'Hae ▴' : 'Hae ▾';
+  btn.classList.toggle('filter-active', open || hasActiveFilters());
 }
 
 function hasActiveFilters() {
@@ -1089,19 +1128,17 @@ function openModal(id, e) {
   document.getElementById('mEst').value      = p ? (p.est||'') : '';
   document.getElementById('mLogged').value   = p ? (p.logged||'') : '';
   document.getElementById('mArchBtn').style.display = p ? '' : 'none';
-  document.getElementById('mGroup').value = p ? (p.group||'') : '';
-
-  // populate datalist with existing groups
-  const groups = [...new Set(projects.filter(x => x.group).map(x => x.group))];
-  document.getElementById('groupList').innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
 
   mColor    = p ? (p.color||'') : '';
   mPriority = p ? normPri(p.priority||'') : '';
+  mCategory = p ? (p.group||'') : '';
   mSubs     = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
 
   renderCPicker();
   renderPri();
+  renderCatPicker();
   renderSubs();
+  lucide.createIcons();
 
   document.getElementById('overlay').classList.remove('hidden');
   setTimeout(() => document.getElementById('mName').focus(), 30);
@@ -1133,7 +1170,7 @@ function saveProject() {
     deadline: document.getElementById('mDeadline').value,
     est:      parseFloat(document.getElementById('mEst').value)    || 0,
     logged:   parseFloat(document.getElementById('mLogged').value) || 0,
-    group:    document.getElementById('mGroup').value.trim(),
+    group:    mCategory,
     color:    mColor,
     subs:     mSubs,
     updatedAt: now,
@@ -1162,7 +1199,7 @@ function renderCPicker() {
       title="${c.name}" onclick="pickColor('${c.hex}')"></div>`
   ).join('');
 }
-function pickColor(hex) { mColor = hex; renderCPicker(); }
+function pickColor(hex) { mColor = mColor === hex ? '' : hex; renderCPicker(); }
 
 function refreshColorFilter() {
   const sel = document.getElementById('fColor');
@@ -1175,12 +1212,20 @@ function refreshColorFilter() {
     }).join('');
 }
 
-function refreshGroupFilter() {
-  const sel = document.getElementById('fGroup');
-  const cur = sel.value;
-  const groups = [...new Set(projects.filter(p=>p.group).map(p=>p.group))].sort();
-  sel.innerHTML = '<option value="">Kaikki ryhmät</option>' +
-    groups.map(g => `<option value="${esc(g)}" ${cur===g?'selected':''}>${esc(g)}</option>`).join('');
+function refreshCatFilter() {
+  const el = document.getElementById('catFilter');
+  if (!el) return;
+  el.innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-filter-btn${fCategory===c?' active':''}" onclick="toggleCatFilter('${c}')" title="${c}">
+      <i data-lucide="${c}"></i>
+    </button>`
+  ).join('');
+  lucide.createIcons();
+}
+
+function toggleCatFilter(cat) {
+  fCategory = fCategory === cat ? '' : cat;
+  render();
 }
 
 // ── SUBTASKS ───────────────────────────────────────────────────────────────
@@ -1302,6 +1347,7 @@ document.addEventListener('keydown', e => {
 // ── INIT ───────────────────────────────────────────────────────────────────
 
 loadCfg();
+lucide.createIcons();
 if (!cfg.token || !cfg.gistId) {
   document.getElementById('setupOverlay').classList.remove('hidden');
 } else {
@@ -1312,6 +1358,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v7</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v9</div>
 </body>
 </html>
