@@ -15,7 +15,7 @@
       --border: #2a2a3a;
       --text: #e0e0f0;
       --muted: #7070a0;
-      --accent: #6c63ff;
+      --accent: #ffffff;
       --danger: #ff4757;
       --success: #2ed573;
       --warning: #ffa502;
@@ -67,7 +67,7 @@
       transition: opacity .15s; white-space: nowrap;
     }
     .btn:hover { opacity: .82; }
-    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-primary  { background: var(--accent); color: #111; }
     .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-danger   { background: var(--danger); color: #fff; }
     .btn-success  { background: var(--success); color: #0a1a0a; }
@@ -103,7 +103,7 @@
       padding: 8px; display: flex; flex-direction: column; gap: 8px;
       min-height: 80px;
     }
-    .k-cards.drag-over { background: rgba(108,99,255,.07); border-radius: var(--r); }
+    .k-cards.drag-over { background: rgba(255,255,255,.07); border-radius: var(--r); }
 
     /* ── CARD ── */
     .card {
@@ -252,6 +252,34 @@
     .group-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .b-group { background: #ffffff0d; color: var(--muted); font-size: 11px; }
 
+    /* ── POST-IT ── */
+    .postit-card {
+      background: var(--surface); border: 1px solid var(--success);
+      border-radius: 10px; width: 100%; max-width: 420px;
+      display: flex; flex-direction: column; gap: 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    }
+    .postit-top {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px 8px; border-bottom: 1px solid var(--border);
+    }
+    .postit-top span { flex: 1; }
+    .postit-close {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; padding: 2px;
+    }
+    .postit-close:hover { color: var(--danger); }
+    .postit-close i[data-lucide] svg { width: 16px; height: 16px; }
+    .postit-area {
+      flex: 1; background: none; border: none; color: var(--text);
+      font-family: inherit; font-size: 15px; line-height: 1.6;
+      padding: 16px; resize: none; outline: none; min-height: 200px;
+    }
+    .postit-foot {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 10px 14px; border-top: 1px solid var(--border);
+    }
+
     /* ── QUICK CAPTURE ── */
     .quick-capture {
       max-width: 860px; margin: 0 auto 16px;
@@ -294,7 +322,7 @@
       align-items: center; justify-content: center; transition: all .15s;
     }
     .cat-btn:hover { border-color: var(--accent); color: var(--text); }
-    .cat-btn.sel   { border-color: var(--accent); background: rgba(108,99,255,.18); color: var(--accent); }
+    .cat-btn.sel   { border-color: var(--accent); background: rgba(255,255,255,.18); color: var(--accent); }
     .cat-btn i[data-lucide] svg { width: 18px; height: 18px; }
 
     /* ── CAT FILTER BUTTONS ── */
@@ -305,7 +333,7 @@
       color: var(--muted); cursor: pointer; display: flex;
       align-items: center; justify-content: center; transition: all .15s;
     }
-    .cat-filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,.18); }
+    .cat-filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,255,255,.18); }
     .cat-filter-btn i[data-lucide] svg { width: 15px; height: 15px; }
 
     .hidden { display: none !important; }
@@ -338,7 +366,7 @@
       padding: 6px 14px; border-radius: var(--r); border: 1px solid var(--border);
       background: none; color: var(--muted); cursor: pointer; font-size: 13px;
     }
-    .setup-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .setup-tab.active { background: var(--accent); color: #111; border-color: var(--accent); }
     .setup-status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 20px; }
     .setup-status.err { color: var(--danger); }
 
@@ -387,12 +415,7 @@
       text-decoration: underline;
     }
 
-    /* ── FILTER ACTIVE DOT ── */
-    .filter-active::after {
-      content: ''; display: inline-block;
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent); margin-left: 5px; vertical-align: middle;
-    }
+    /* filter-active: just border color, no dot */
 
     @media (max-width: 700px) {
       .kanban-view { grid-template-columns: 1fr; }
@@ -406,14 +429,14 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v12</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v15</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="eye"></i></button>
-  <button class="hdr-btn" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="list"></i></button>
-  <button class="hdr-btn" id="vKanban" onclick="setView('kanban')" title="Kanban"><i data-lucide="kanban"></i></button>
+  <button class="hdr-btn" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
+  <button class="hdr-btn" id="vKanban" onclick="setView('kanban')" title="Kanban"><i data-lucide="grid-2x2"></i></button>
 
   <div class="dd-wrap">
     <button class="hdr-btn text-btn" onclick="toggleJsonMenu()">JSON</button>
@@ -423,8 +446,41 @@
     </div>
   </div>
   <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
+  <button class="hdr-btn" onclick="openPostit()" title="Uusi lappu"><i data-lucide="sticky-note"></i></button>
 
 </header>
+
+<!-- ── POST-IT OVERLAY ── -->
+<div class="overlay hidden" id="postitOverlay" onclick="postitOverlayClick(event)">
+  <div class="postit-card">
+    <div class="postit-top">
+      <i data-lucide="sticky-note" style="width:15px;height:15px;color:var(--muted)"></i>
+      <span style="font-size:12px;color:var(--muted)">Kirjoita vapaasti — 1. rivi = otsikko</span>
+      <button class="postit-close" onclick="closePostit()"><i data-lucide="x"></i></button>
+    </div>
+    <textarea class="postit-area" id="postitText" placeholder="Mitä mielessä..."></textarea>
+    <div class="postit-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closePostit()">Peruuta</button>
+      <button class="btn btn-success" onclick="savePostit()" style="display:inline-flex;align-items:center;gap:6px">
+        <i data-lucide="bookmark-plus"></i> Tallenna
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ATTACH OVERLAY ── -->
+<div class="overlay hidden" id="attachOverlay" onclick="attachOverlayClick(event)">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+      <i data-lucide="link"></i> Liitä projektiin
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Sisältö lisätään alatehtävänä valittuun projektiin.</p>
+    <div id="attachList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeAttach()">Peruuta</button>
+    </div>
+  </div>
+</div>
 
 <div class="filter-panel hidden" id="filterPanel">
   <input class="search" id="qSearch" type="text" placeholder="Hae..." oninput="render()">
@@ -434,11 +490,7 @@
     <option value="inprogress">Työn alla</option>
     <option value="done">Valmis</option>
   </select>
-  <div class="cat-filter" id="priFilter">
-    <button class="cat-filter-btn" id="pfNow"   onclick="togglePriFilter('now')"   title="Nyt"><i data-lucide="zap"></i></button>
-    <button class="cat-filter-btn" id="pfLater" onclick="togglePriFilter('later')" title="Myöhemmin"><i data-lucide="clock"></i></button>
-  </div>
-  <select class="fsel" id="fColor" onchange="render()">
+<select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
   </select>
   <div class="cat-filter" id="catFilter"></div>
@@ -473,22 +525,13 @@
       <textarea class="fta" id="mDesc" placeholder="Muistiinpanot, huomiot..."></textarea>
     </div>
 
-    <div class="fr">
-      <div class="fg">
-        <label class="fl">Kiireellisyys</label>
-        <div class="pri-toggle">
-          <button class="pri-btn" id="priNow"   onclick="setPri('now')"   title="Nyt"><i data-lucide="zap"></i> Nyt</button>
-          <button class="pri-btn" id="priLater" onclick="setPri('later')" title="Myöhemmin"><i data-lucide="clock"></i> Myöh.</button>
-        </div>
-      </div>
-      <div class="fg">
-        <label class="fl">Tila</label>
-        <select class="fi" id="mStatus">
-          <option value="todo">Suunnittelussa</option>
-          <option value="inprogress">Työn alla</option>
-          <option value="done">Valmis</option>
-        </select>
-      </div>
+    <div class="fg">
+      <label class="fl">Tila</label>
+      <select class="fi" id="mStatus">
+        <option value="todo">Suunnittelussa</option>
+        <option value="inprogress">Työn alla</option>
+        <option value="done">Valmis</option>
+      </select>
     </div>
 
     <div class="fg">
@@ -528,7 +571,7 @@
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto">Arkistoi</button>
       <button class="btn btn-ghost" onclick="closeModal()">Peruuta</button>
-      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="bookmark-plus"></i></button>
+      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="bookmark-plus"></i> Tallenna</button>
     </div>
   </div>
 </div>
@@ -585,7 +628,7 @@ const COLORS = [
   { name: 'Keltainen', hex: '#ffa502' },
   { name: 'Vihreä',    hex: '#2ed573' },
   { name: 'Sininen',   hex: '#1e90ff' },
-  { name: 'Violetti',  hex: '#6c63ff' },
+  { name: 'Valkoinen', hex: '#e0e0f0' },
 ];
 
 const CATEGORIES = ['cannabis','command','hand-metal','type-outline','search-alert','shapes','lamp-desk'];
@@ -596,10 +639,8 @@ let projects = [];
 let view = 'list';
 let showArchive = false;
 let editingId = null;
-let mPriority = '';
 let mCategory = '';
 let fCategory  = '';
-let fPriority  = '';
 let mColor = '';
 let mSubs = [];
 let dragId = null;
@@ -777,12 +818,10 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 function filtered(list) {
   const q  = document.getElementById('qSearch').value.trim().toLowerCase();
   const fs = document.getElementById('fStatus').value;
-  const fp = fPriority;
   const fc = document.getElementById('fColor').value;
   return list.filter(p => {
     if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
     if (fs && p.status !== fs) return false;
-    if (fp && normPri(p.priority||'') !== fp) return false;
     if (fc && p.color !== fc) return false;
     if (fCategory && (p.group||'') !== fCategory) return false;
     return true;
@@ -887,9 +926,6 @@ function card(p, mode) {
   const stPct   = stTotal > 0 ? Math.round(stDone/stTotal*100) : 0;
 
   let badges = '';
-  const pri = normPri(p.priority || '');
-  if (pri === 'now')   badges += `<span class="pri-icon" title="Nyt"><i data-lucide="zap"></i></span>`;
-  if (pri === 'later') badges += `<span class="pri-icon" title="Myöhemmin"><i data-lucide="clock"></i></span>`;
   if (p.group) badges += `<span class="pri-icon" title="${esc(p.group)}"><i data-lucide="${esc(p.group)}"></i></span>`;
   if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr} ${countdown(dl, today)}</span>`;
   if (mode !== 'kanban') {
@@ -917,8 +953,9 @@ function card(p, mode) {
     </div>`;
   } else {
     actions = `<div class="card-actions">
-      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
       ${p.status !== 'done' ? `<button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Merkitse valmiiksi"><i data-lucide="bookmark-check"></i></button>` : ''}
+      ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä projektiin"><i data-lucide="link"></i></button>` : ''}
     </div>`;
   }
 
@@ -1014,6 +1051,91 @@ function del(id, e) {
 }
 function toggleArch() { showArchive = !showArchive; render(); }
 
+// ── POST-IT ────────────────────────────────────────────────────────────────
+
+function openPostit() {
+  document.getElementById('postitOverlay').classList.remove('hidden');
+  lucide.createIcons();
+  setTimeout(() => document.getElementById('postitText').focus(), 30);
+}
+
+function closePostit() {
+  document.getElementById('postitOverlay').classList.add('hidden');
+  document.getElementById('postitText').value = '';
+}
+
+function postitOverlayClick(e) {
+  if (e.target === document.getElementById('postitOverlay')) closePostit();
+}
+
+function savePostit() {
+  const raw = document.getElementById('postitText').value.trim();
+  if (!raw) return;
+  const lines = raw.split('\n');
+  const title = lines[0].trim();
+  const desc  = lines.slice(1).join('\n').trim();
+  const now   = new Date().toISOString();
+  projects.unshift({
+    id: uid(), title, desc, priority: '', status: 'todo',
+    deadline: '', est: 0, logged: 0, color: '', group: '',
+    subs: [], archived: false, draft: true,
+    createdAt: now, updatedAt: now,
+  });
+  closePostit();
+  render(); triggerSave();
+  toast('Lappu tallennettu!');
+}
+
+// ── LIITÄ PROJEKTIIN ───────────────────────────────────────────────────────
+
+let attachingId = null;
+
+function openAttach(id, e) {
+  if (e) e.stopPropagation();
+  attachingId = id;
+  const source = projects.find(p => p.id === id);
+  if (!source) return;
+  const targets = projects.filter(p => p.id !== id && !p.archived && !p.draft);
+  const list = document.getElementById('attachList');
+  list.innerHTML = targets.length === 0
+    ? '<p style="color:var(--muted);font-size:13px">Ei projekteja joihin liittää.</p>'
+    : targets.map(p => `
+        <button class="btn btn-ghost" style="text-align:left;display:block;width:100%" onclick="doAttach('${p.id}')">
+          ${p.color ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:6px"></span>` : ''}
+          ${esc(p.title)}
+        </button>`).join('');
+  document.getElementById('attachOverlay').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeAttach() {
+  document.getElementById('attachOverlay').classList.add('hidden');
+  attachingId = null;
+}
+
+function attachOverlayClick(e) {
+  if (e.target === document.getElementById('attachOverlay')) closeAttach();
+}
+
+function doAttach(targetId) {
+  const source = projects.find(p => p.id === attachingId);
+  const target = projects.find(p => p.id === targetId);
+  if (!source || !target) return;
+  // Add content as subtask(s) — each non-empty line becomes a subtask
+  const lines = [source.title, ...(source.desc ? source.desc.split('\n') : [])]
+    .map(l => l.trim()).filter(Boolean);
+  lines.forEach(l => {
+    target.subs = target.subs || [];
+    target.subs.push({ id: uid(), title: l, done: false });
+  });
+  // Archive the draft card
+  source.archived = true;
+  source.draft = false;
+  closeAttach();
+  render(); triggerSave();
+  toast(`Liitetty: ${target.title}`);
+}
+
 // ── PRIORITY ───────────────────────────────────────────────────────────────
 
 function countdown(dl, today) {
@@ -1031,16 +1153,6 @@ function normPri(v) {
   if (v === 'high' || v === 'now')   return 'now';
   if (v === 'low'  || v === 'later') return 'later';
   return '';
-}
-
-function setPri(val) {
-  mPriority = mPriority === val ? '' : val;
-  renderPri();
-}
-
-function renderPri() {
-  document.getElementById('priNow').className   = 'pri-btn' + (mPriority === 'now'   ? ' sel-now'   : '');
-  document.getElementById('priLater').className = 'pri-btn' + (mPriority === 'later' ? ' sel-later' : '');
 }
 
 function setCat(cat) {
@@ -1084,7 +1196,7 @@ function toggleFilterPanel() {
 }
 
 function hasActiveFilters() {
-  return fPriority || fCategory ||
+  return fCategory ||
     ['qSearch','fStatus','fColor'].some(id => document.getElementById(id)?.value);
 }
 
@@ -1125,12 +1237,10 @@ function openModal(id, e) {
   document.getElementById('mArchBtn').style.display = p ? '' : 'none';
 
   mColor    = p ? (p.color||'') : '';
-  mPriority = p ? normPri(p.priority||'') : '';
   mCategory = p ? (p.group||'') : '';
   mSubs     = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
 
   renderCPicker();
-  renderPri();
   renderCatPicker();
   renderSubs();
   lucide.createIcons();
@@ -1160,7 +1270,7 @@ function saveProject() {
   const data = {
     title:    name,
     desc:     document.getElementById('mDesc').value.trim(),
-    priority: mPriority,
+    priority: '',
     status:   document.getElementById('mStatus').value,
     deadline: document.getElementById('mDeadline').value,
     est:      parseFloat(document.getElementById('mEst').value)    || 0,
@@ -1220,14 +1330,6 @@ function refreshCatFilter() {
 
 function toggleCatFilter(cat) {
   fCategory = fCategory === cat ? '' : cat;
-  render();
-}
-
-function togglePriFilter(val) {
-  fPriority = fPriority === val ? '' : val;
-  document.getElementById('pfNow').classList.toggle('active', fPriority === 'now');
-  document.getElementById('pfLater').classList.toggle('active', fPriority === 'later');
-  lucide.createIcons();
   render();
 }
 
@@ -1361,6 +1463,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v12</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v15</div>
 </body>
 </html>
