@@ -9,12 +9,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f0f13;
-      --surface: #1a1a24;
-      --surface2: #22222f;
-      --border: #2a2a3a;
-      --text: #e0e0f0;
-      --muted: #7070a0;
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222222;
+      --border: #2a2a2a;
+      --text: #e0e0e0;
+      --muted: #707070;
       --accent: #ffffff;
       --danger: #ff4757;
       --success: #2ed573;
@@ -70,7 +70,7 @@
     .btn-primary  { background: var(--accent); color: #111; }
     .btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .btn-danger   { background: var(--danger); color: #fff; }
-    .btn-success  { background: var(--success); color: #0a1a0a; }
+    .btn-success  { background: var(--success); color: #0a0a0a; }
     .btn-sm       { padding: 4px 10px; font-size: 12px; }
 
     /* ── MAIN ── */
@@ -112,7 +112,7 @@
       position: relative; user-select: none;
       transition: border-color .15s;
     }
-    .card:hover { border-color: #4a4a7a; }
+    .card:hover { border-color: #4a4a4a; }
     .card.drag-over { border-color: var(--accent); background: var(--surface2); }
     .card.dragging  { opacity: .45; }
 
@@ -295,7 +295,7 @@
     }
     .quick-capture input::placeholder { color: var(--muted); }
     .quick-capture-hint {
-      font-size: 12px; color: #3a3a50; padding-right: 14px; white-space: nowrap;
+      font-size: 12px; color: #3a3a3a; padding-right: 14px; white-space: nowrap;
     }
 
     /* ── LUCIDE ICONS ── */
@@ -374,12 +374,12 @@
     .hdr-btn {
       width: 34px; height: 34px; padding: 0;
       display: inline-flex; align-items: center; justify-content: center;
-      border-radius: var(--r); border: 1px solid #3a3a4a;
+      border-radius: var(--r); border: 1px solid #3a3a3a;
       background: none; color: var(--muted); cursor: pointer;
       transition: color .15s, border-color .15s;
       flex-shrink: 0;
     }
-    .hdr-btn:hover { color: var(--text); border-color: #5a5a7a; }
+    .hdr-btn:hover { color: var(--text); border-color: #5a5a5a; }
     .hdr-btn.active { color: var(--accent); border-color: var(--accent); }
     .hdr-btn i[data-lucide] svg { width: 16px; height: 16px; }
     .hdr-btn.text-btn { width: auto; padding: 0 10px; font-size: 12px; font-weight: 500; }
@@ -429,7 +429,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v15</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v16</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -628,7 +628,7 @@ const COLORS = [
   { name: 'Keltainen', hex: '#ffa502' },
   { name: 'Vihreä',    hex: '#2ed573' },
   { name: 'Sininen',   hex: '#1e90ff' },
-  { name: 'Valkoinen', hex: '#e0e0f0' },
+  { name: 'Valkoinen', hex: '#e0e0e0' },
 ];
 
 const CATEGORIES = ['cannabis','command','hand-metal','type-outline','search-alert','shapes','lamp-desk'];
@@ -867,7 +867,7 @@ function render() {
     html += '</div>';
   } else {
     const cols = [
-      { key: 'todo',       label: 'Suunnittelussa', dot: '#747d8c' },
+      { key: 'todo',       label: 'Suunnittelussa', dot: '#747474' },
       { key: 'inprogress', label: 'Työn alla',  dot: '#ffa502' },
       { key: 'done',       label: 'Valmis',      dot: '#2ed573' },
     ];
@@ -1300,7 +1300,7 @@ function archiveCur() {
 function renderCPicker() {
   document.getElementById('cpicker').innerHTML = COLORS.map(c =>
     `<div class="cswatch ${mColor===c.hex?'sel':''}"
-      style="background:${c.hex||'#2a2a3a'};border-color:${c.hex||'#2a2a3a'}"
+      style="background:${c.hex||'#2a2a2a'};border-color:${c.hex||'#2a2a2a'}"
       title="${c.name}" onclick="pickColor('${c.hex}')"></div>`
   ).join('');
 }
@@ -1463,6 +1463,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a50;user-select:none">v15</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v16</div>
 </body>
 </html>
