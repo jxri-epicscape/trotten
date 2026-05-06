@@ -316,6 +316,17 @@
       font-size: 12px; color: #3a3a3a; padding-right: 14px; white-space: nowrap;
     }
 
+    /* ── EXPAND TOGGLE ── */
+    .expand-toggle {
+      flex: 1; padding: 7px 11px; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); cursor: pointer; display: flex; align-items: center;
+      gap: 6px; font-size: 12px; font-weight: 500; transition: all .15s;
+      font-family: inherit;
+    }
+    .expand-toggle:hover { border-color: #4a4a4a; color: var(--text); }
+    .expand-toggle.open  { border-color: var(--accent); color: var(--text); }
+
     /* ── LUCIDE ICONS ── */
     i[data-lucide], i[data-lucide] svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
 
@@ -447,12 +458,12 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v18</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v20</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
-  <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="folder-bookmark"></i></button>
+  <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="eye"></i></button>
   <button class="hdr-btn" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
   <button class="hdr-btn" id="vKanban" onclick="setView('kanban')" title="Kanban"><i data-lucide="grid-2x2"></i></button>
@@ -506,7 +517,6 @@
     <option value="">Kaikki tilat</option>
     <option value="todo">Suunnittelussa</option>
     <option value="inprogress">Työn alla</option>
-    <option value="done">Valmis</option>
   </select>
 <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
@@ -541,61 +551,44 @@
       <input class="fi" id="mName" type="text" placeholder="Projektin nimi">
     </div>
 
-    <div class="fg">
-      <label class="fl">Kategoria</label>
-      <div class="cat-picker" id="catPicker"></div>
-    </div>
-
-    <div class="fg">
-      <label class="fl">Kuvaus / huomiot</label>
-      <textarea class="fta" id="mDesc" placeholder="Muistiinpanot, huomiot..."></textarea>
-    </div>
-
-    <div class="fg">
-      <label class="fl">Tila</label>
-      <select class="fi" id="mStatus">
-        <option value="todo">Suunnittelussa</option>
-        <option value="inprogress">Työn alla</option>
-        <option value="done">Valmis</option>
-      </select>
-    </div>
-
-    <div class="fg">
-      <label class="fl">Deadline</label>
-      <input class="fi" id="mDeadline" type="date">
-    </div>
-
-    <button class="extra-toggle" id="extraToggle" onclick="toggleExtra(event)">+ Arvioitu ja kirjattu aika</button>
-    <div id="extraFields" class="hidden">
-      <div class="fr">
-        <div class="fg">
-          <label class="fl">Arvioitu aika (h)</label>
-          <input class="fi" id="mEst" type="number" placeholder="0" min="0" step="0.5">
-        </div>
-        <div class="fg">
-          <label class="fl">Kirjattu aika (h)</label>
-          <input class="fi" id="mLogged" type="number" placeholder="0" min="0" step="0.5">
-        </div>
+    <div class="fg" style="margin-bottom:8px">
+      <div style="display:flex;gap:8px">
+        <button class="expand-toggle" id="catToggle" onclick="toggleCatExpand()" type="button">
+          Kategoria <i data-lucide="chevron-down" id="catChev" style="width:13px;height:13px;margin-left:auto"></i>
+        </button>
+        <button class="expand-toggle" id="colorToggle" onclick="toggleColorExpand()" type="button">
+          Väri <i data-lucide="chevron-down" id="colorChev" style="width:13px;height:13px;margin-left:auto"></i>
+        </button>
+      </div>
+      <div id="catExpand" class="hidden" style="margin-top:10px">
+        <div class="cat-picker" id="catPicker"></div>
+      </div>
+      <div id="colorExpand" class="hidden" style="margin-top:10px">
+        <div class="cpicker" id="cpicker"></div>
       </div>
     </div>
 
     <div class="fg">
-      <label class="fl">Väri</label>
-      <div class="cpicker" id="cpicker"></div>
+      <label class="fl">Sisältö</label>
+      <textarea class="fta" id="mDesc" placeholder="Sisältö, muistiinpanot..." style="min-height:100px"></textarea>
     </div>
 
-    <div class="fg">
-      <label class="fl">Alatehtävät</label>
-      <div class="st-list" id="stList"></div>
-      <div class="st-add-row">
-        <input class="st-add-inp" id="stInput" type="text" placeholder="Lisää alatehtävä..."
-          onkeydown="if(event.key==='Enter'){addSt()}">
-        <button class="btn btn-ghost btn-sm" onclick="addSt()">+</button>
+    <div class="fr">
+      <div class="fg">
+        <label class="fl">Tila</label>
+        <select class="fi" id="mStatus">
+          <option value="todo">Suunnittelussa</option>
+          <option value="inprogress">Työn alla</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Deadline</label>
+        <input class="fi" id="mDeadline" type="date">
       </div>
     </div>
 
     <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="folder-bookmark"></i></button>
+      <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
       <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="bookmark-plus"></i> Tallenna</button>
     </div>
   </div>
@@ -667,7 +660,6 @@ let editingId = null;
 let mCategory = '';
 let fCategory  = '';
 let mColor = '';
-let mSubs = [];
 let dragId = null;
 
 // ── GIST STORAGE ───────────────────────────────────────────────────────────
@@ -866,8 +858,8 @@ function setView(v) {
 }
 
 function render() {
-  const active   = projects.filter(p => !p.archived);
-  const archived = projects.filter(p => p.archived);
+  const active   = projects.filter(p => !p.archived && p.status !== 'done');
+  const archived = projects.filter(p => p.archived  || p.status === 'done');
   const fActive  = filtered(active);
   let html = '';
 
@@ -893,8 +885,7 @@ function render() {
   } else {
     const cols = [
       { key: 'todo',       label: 'Suunnittelussa', dot: '#747474' },
-      { key: 'inprogress', label: 'Työn alla',  dot: '#ffa502' },
-      { key: 'done',       label: 'Valmis',      dot: '#2ed573' },
+      { key: 'inprogress', label: 'Työn alla',       dot: '#ffa502' },
     ];
     html += '<div class="kanban-view">';
     cols.forEach(c => {
@@ -924,7 +915,7 @@ function render() {
     html += `<div class="section-bar">
       <span class="section-label">Arkisto (${archived.length})</span>
       <div class="section-line"></div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleArch()">${showArchive ? 'Piilota' : 'Näytä'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleArch()" style="display:inline-flex;align-items:center;padding:4px 8px"><i data-lucide="${showArchive ? 'chevron-up' : 'chevron-down'}"></i></button>
     </div>`;
     if (showArchive) {
       html += '<div class="list-view" style="margin-top:0">';
@@ -943,30 +934,19 @@ function render() {
 function card(p, mode) {
   const today = dayStart(new Date());
   const dl    = p.deadline ? dayStart(new Date(p.deadline)) : null;
-  const over  = dl && dl < today && p.status !== 'done';
+  const over  = dl && dl < today;
   const dlStr = dl ? dl.toLocaleDateString('fi-FI') : null;
-
-  const stDone  = (p.subs||[]).filter(s => s.done).length;
-  const stTotal = (p.subs||[]).length;
-  const stPct   = stTotal > 0 ? Math.round(stDone/stTotal*100) : 0;
 
   let badges = '';
   if (p.group) badges += `<span class="pri-icon" title="${esc(p.group)}"><i data-lucide="${esc(p.group)}"></i></span>`;
   if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr} ${countdown(dl, today)}</span>`;
   if (mode !== 'kanban') {
-    const sl = { todo: ['b-todo','Suunnittelussa'], inprogress: ['b-inprog','Työn alla'], done: ['b-done','Valmis'] };
+    const sl = { todo: ['b-todo','Suunnittelussa'], inprogress: ['b-inprog','Työn alla'] };
     const [cls, lbl] = sl[p.status||'todo'] || sl.todo;
     badges += `<span class="badge ${cls}">${lbl}</span>`;
   }
-  if (p.est) {
-    const lg = p.logged || 0;
-    badges += `<span class="badge b-time">⏱ ${lg}/${p.est}h</span>`;
-  }
-  if (p.group && mode === 'kanban') {
-    badges += `<span class="badge b-group">📁 ${esc(p.group)}</span>`;
-  }
 
-  const tCls = p.status === 'done' ? 'card-title done' : 'card-title';
+  const tCls = 'card-title';
   const drag = mode !== 'archive' ? `draggable="true" ondragstart="dStart(event,'${p.id}')" ondragend="dEnd(event)"` : '';
   const dov  = mode !== 'archive' ? `ondragover="cOver(event,'${p.id}')" ondrop="cDrop(event,'${p.id}')"` : '';
 
@@ -979,7 +959,7 @@ function card(p, mode) {
   } else {
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
-      ${p.status !== 'done' ? `<button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Merkitse valmiiksi"><i data-lucide="bookmark-check"></i></button>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi / Valmis"><i data-lucide="bookmark-check"></i></button>
       ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä projektiin"><i data-lucide="link"></i></button>` : ''}
     </div>`;
   }
@@ -987,15 +967,10 @@ function card(p, mode) {
   return `<div class="card" id="c-${p.id}" ${drag} ${dov}>
     ${p.color ? `<div class="card-stripe" style="background:${p.color}"></div>` : ''}
     <div class="card-top">
-      ${mode !== 'archive' ? `<input type="checkbox" class="card-cb" ${p.status==='done'?'checked':''} onclick="togDone('${p.id}',event)" title="Merkitse valmiiksi">` : ''}
       <div class="${tCls}">${esc(p.title)}</div>
     </div>
     ${p.desc ? `<div class="card-desc">${esc(p.desc)}</div>` : ''}
     ${badges ? `<div class="card-badges">${badges}</div>` : ''}
-    ${stTotal > 0 ? `<div class="subtask-bar">
-      <div class="sb-bg"><div class="sb-fill" style="width:${stPct}%"></div></div>
-      <div class="sb-txt">${stDone}/${stTotal} alatehtävää</div>
-    </div>` : ''}
     ${actions}
   </div>`;
 }
@@ -1053,15 +1028,10 @@ function kbDrop(e, status) {
 
 // ── PROJECT ACTIONS ────────────────────────────────────────────────────────
 
-function togDone(id, e) {
-  e.stopPropagation();
-  const p = projects.find(x => x.id === id);
-  if (p) { p.status = p.status === 'done' ? 'todo' : 'done'; triggerSave(); render(); }
-}
 function qDone(id, e) {
   e.stopPropagation();
   const p = projects.find(x => x.id === id);
-  if (p) { p.status = 'done'; triggerSave(); render(); toast('Valmis!'); }
+  if (p) { p.archived = true; triggerSave(); render(); toast('Arkistoitu!'); }
 }
 function unarch(id, e) {
   e.stopPropagation();
@@ -1151,14 +1121,10 @@ function doAttach(targetId) {
   const source = projects.find(p => p.id === attachingId);
   const target = projects.find(p => p.id === targetId);
   if (!source || !target) return;
-  // Add content as subtask(s) — each non-empty line becomes a subtask
+  // Append source content to target's desc
   const lines = [source.title, ...(source.desc ? source.desc.split('\n') : [])]
-    .map(l => l.trim()).filter(Boolean);
-  lines.forEach(l => {
-    target.subs = target.subs || [];
-    target.subs.push({ id: uid(), title: l, done: false });
-  });
-  // Archive the draft card
+    .map(l => l.trim()).filter(Boolean).join('\n');
+  target.desc = target.desc ? target.desc + '\n\n' + lines : lines;
   source.archived = true;
   source.draft = false;
   closeAttach();
@@ -1183,6 +1149,26 @@ function normPri(v) {
   if (v === 'high' || v === 'now')   return 'now';
   if (v === 'low'  || v === 'later') return 'later';
   return '';
+}
+
+let catOpen = false, colorOpen = false;
+
+function toggleCatExpand() {
+  catOpen = !catOpen;
+  document.getElementById('catExpand').classList.toggle('hidden', !catOpen);
+  document.getElementById('catToggle').classList.toggle('open', catOpen);
+  document.getElementById('catChev').setAttribute('data-lucide', catOpen ? 'chevron-up' : 'chevron-down');
+  if (catOpen) renderCatPicker();
+  lucide.createIcons();
+}
+
+function toggleColorExpand() {
+  colorOpen = !colorOpen;
+  document.getElementById('colorExpand').classList.toggle('hidden', !colorOpen);
+  document.getElementById('colorToggle').classList.toggle('open', colorOpen);
+  document.getElementById('colorChev').setAttribute('data-lucide', colorOpen ? 'chevron-up' : 'chevron-down');
+  if (colorOpen) renderCPicker();
+  lucide.createIcons();
 }
 
 function setCat(cat) {
@@ -1253,14 +1239,6 @@ function closeJsonMenu() {
   document.getElementById('jsonMenu').classList.add('hidden');
 }
 
-function toggleExtra(e) {
-  e.preventDefault();
-  const el  = document.getElementById('extraFields');
-  const btn = document.getElementById('extraToggle');
-  const open = el.classList.toggle('hidden') === false;
-  btn.textContent = open ? '− Arvioitu ja kirjattu aika' : '+ Arvioitu ja kirjattu aika';
-}
-
 document.addEventListener('click', e => {
   if (!e.target.closest('.dd-wrap')) closeJsonMenu();
 });
@@ -1278,17 +1256,18 @@ function openModal(id, e) {
 
   document.getElementById('mStatus').value   = p ? (p.status||'todo') : 'todo';
   document.getElementById('mDeadline').value = p ? (p.deadline||'') : '';
-  document.getElementById('mEst').value      = p ? (p.est||'') : '';
-  document.getElementById('mLogged').value   = p ? (p.logged||'') : '';
   document.getElementById('mArchBtn').style.display = p ? '' : 'none';
 
   mColor    = p ? (p.color||'') : '';
   mCategory = p ? (p.group||'') : '';
-  mSubs     = p ? JSON.parse(JSON.stringify(p.subs||[])) : [];
 
-  renderCPicker();
-  renderCatPicker();
-  renderSubs();
+  // Reset expand panels
+  catOpen = false; colorOpen = false;
+  document.getElementById('catExpand').classList.add('hidden');
+  document.getElementById('colorExpand').classList.add('hidden');
+  document.getElementById('catToggle').classList.remove('open');
+  document.getElementById('colorToggle').classList.remove('open');
+
   lucide.createIcons();
 
   document.getElementById('overlay').classList.remove('hidden');
@@ -1297,9 +1276,6 @@ function openModal(id, e) {
 
 function closeModal() {
   document.getElementById('overlay').classList.add('hidden');
-  document.getElementById('stInput').value = '';
-  document.getElementById('extraFields').classList.add('hidden');
-  document.getElementById('extraToggle').textContent = '+ Arvioitu ja kirjattu aika';
   editingId = null;
 }
 
@@ -1319,11 +1295,8 @@ function saveProject() {
     priority: '',
     status:   document.getElementById('mStatus').value,
     deadline: document.getElementById('mDeadline').value,
-    est:      parseFloat(document.getElementById('mEst').value)    || 0,
-    logged:   parseFloat(document.getElementById('mLogged').value) || 0,
     group:    mCategory,
     color:    mColor,
-    subs:     mSubs,
     updatedAt: now,
   };
   if (editingId) {
@@ -1379,28 +1352,6 @@ function toggleCatFilter(cat) {
   render();
 }
 
-// ── SUBTASKS ───────────────────────────────────────────────────────────────
-
-function renderSubs() {
-  document.getElementById('stList').innerHTML = mSubs.map((s,i) =>
-    `<div class="st-item">
-      <input type="checkbox" class="st-cb" ${s.done?'checked':''} onchange="togSub(${i})">
-      <input type="text" class="st-inp ${s.done?'done':''}" value="${esc(s.title)}"
-        oninput="updSub(${i},this.value)"
-        onkeydown="if(event.key==='Enter'){document.getElementById('stInput').focus()}">
-      <span class="st-del" onclick="rmSub(${i})">×</span>
-    </div>`
-  ).join('');
-}
-function addSt() {
-  const inp = document.getElementById('stInput');
-  const v = inp.value.trim(); if (!v) return;
-  mSubs.push({ id: uid(), title: v, done: false });
-  inp.value = ''; renderSubs(); inp.focus();
-}
-function togSub(i) { mSubs[i].done = !mSubs[i].done; renderSubs(); }
-function updSub(i, v) { mSubs[i].title = v; }
-function rmSub(i)  { mSubs.splice(i,1); renderSubs(); }
 
 // ── IMPORT / EXPORT ────────────────────────────────────────────────────────
 
@@ -1509,6 +1460,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v18</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v20</div>
 </body>
 </html>
