@@ -466,7 +466,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v30</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v31</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -509,7 +509,7 @@
   <div class="modal" style="max-width:380px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px">
-        <i data-lucide="sparkles"></i> AI-toiminnot
+        <i data-lucide="sparkles"></i> Lähetä Promptiksi
       </div>
       <button onclick="closeAi()" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:2px"><i data-lucide="x" style="width:18px;height:18px"></i></button>
     </div>
@@ -525,9 +525,9 @@
 <div class="overlay hidden" id="attachOverlay" onclick="attachOverlayClick(event)">
   <div class="modal" style="max-width:400px">
     <div class="modal-title" style="display:flex;align-items:center;gap:8px">
-      <i data-lucide="link"></i> Liitä projektiin
+      <i data-lucide="link"></i> Liitä lappuun
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Sisältö liitetään valitun lapun sisältöön.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Valitse lappu johon sisältö liitetään.</p>
     <div id="attachList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeAttach()">Peruuta</button>
@@ -979,7 +979,7 @@ function card(p, mode) {
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä projektiin"><i data-lucide="link"></i></button>` : ''}
+      ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä lappuun"><i data-lucide="link"></i></button>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="openAi('${p.id}',event)" style="display:inline-flex;align-items:center" title="AI-toiminnot"><i data-lucide="sparkles"></i></button>
     </div>`;
@@ -1645,6 +1645,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v30</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v31</div>
 </body>
 </html>
