@@ -458,7 +458,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v20</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v21</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -961,6 +961,7 @@ function card(p, mode) {
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi / Valmis"><i data-lucide="bookmark-check"></i></button>
       ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä projektiin"><i data-lucide="link"></i></button>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
     </div>`;
   }
 
@@ -1027,6 +1028,18 @@ function kbDrop(e, status) {
 }
 
 // ── PROJECT ACTIONS ────────────────────────────────────────────────────────
+
+function copyCard(id, e) {
+  e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  const text = [p.title, p.desc].filter(Boolean).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => toast('Kopioitu!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); toast('Kopioitu!');
+  });
+}
 
 function qDone(id, e) {
   e.stopPropagation();
@@ -1460,6 +1473,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v20</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v21</div>
 </body>
 </html>
