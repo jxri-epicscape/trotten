@@ -459,14 +459,13 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v23</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v25</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
   <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="search"></i></button>
-  <button class="hdr-btn active" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
 
   <div class="dd-wrap">
     <button class="hdr-btn text-btn" onclick="toggleJsonMenu()">JSON</button>
@@ -571,7 +570,7 @@
 
     <div class="modal-foot">
       <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="archive"></i> Tallenna</button>
+      <button class="btn btn-primary" onclick="saveProject()">Tallenna</button>
     </div>
   </div>
 </div>
@@ -677,7 +676,7 @@ async function loadFromGist() {
     if (content) {
       const parsed = JSON.parse(content);
       projects = parsed.projects || [];
-      view     = parsed.view    || 'list';
+      view     = 'list';
     }
     setStatus('');
   } catch(e) {
@@ -829,10 +828,7 @@ function dayStart(d) { d.setHours(0,0,0,0); return d; }
 // ── RENDER ─────────────────────────────────────────────────────────────────
 
 function setView(v) {
-  view = v;
-  triggerSave();
-  document.getElementById('vList').classList.toggle('active', v === 'list');
-  document.getElementById('vKanban').classList.toggle('active', v === 'kanban');
+  view = 'list';
   render();
 }
 
@@ -861,32 +857,6 @@ function render() {
       }
     }
     html += '</div>';
-  } else {
-    const cols = [
-      { key: 'todo',       label: 'Suunnittelussa', dot: '#747474' },
-      { key: 'inprogress', label: 'Työn alla',       dot: '#ffa502' },
-    ];
-    html += '<div class="kanban-view">';
-    cols.forEach(c => {
-      const items = fActive.filter(p => p.status === c.key);
-      html += `<div class="k-col"
-        ondragover="kbOver(event,'${c.key}')"
-        ondrop="kbDrop(event,'${c.key}')"
-        ondragleave="kbLeave(event)">
-        <div class="k-col-head">
-          <span style="display:flex;align-items:center;gap:6px">
-            <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};display:inline-block"></span>
-            ${c.label}
-          </span>
-          <span class="k-count">${items.length}</span>
-        </div>
-        <div class="k-cards" id="kc-${c.key}">`;
-      if (items.length === 0) html += '<div class="empty" style="padding:20px;font-size:13px">Tyhjä</div>';
-      else items.forEach(p => { html += card(p, 'kanban'); });
-      html += '</div></div>';
-    });
-    html += '</div>';
-  }
 
   // Archive
   if (archived.length > 0) {
@@ -1471,6 +1441,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v23</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v25</div>
 </body>
 </html>
