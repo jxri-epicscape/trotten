@@ -140,7 +140,10 @@ Every note has a ✨ button. Click it to choose a preset — Trotten builds a pr
 | Next steps | Prioritized action list |
 | Code | Turns ideas into a code snippet |
 | Rewrite | Professional, clear, concise version |
+| Write email | Draft a professional email with subject line |
 | Ask more | Claude asks three clarifying questions |
+
+> **Note:** Claude.ai will show a "Use caution before running this prompt" warning when the link opens. This is Claude's own safety feature — it appears whenever a prompt arrives via an external URL. It is not a security issue with Trotten. Your note content never leaves your device except to be passed directly to Claude.ai in the URL. Just click Continue.
 
 ---
 

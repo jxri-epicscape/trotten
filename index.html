@@ -466,7 +466,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v29</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v30</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -703,6 +703,7 @@ const AI_PRESETS = [
   { name: 'Seuraavat askeleet',  prompt: 'Create a short prioritized action list based on these notes:\n\n[TEXT]' },
   { name: 'Koodaa',              prompt: 'Transform these ideas into a clean, well-commented code snippet:\n\n[TEXT]' },
   { name: 'Tyylittele',          prompt: 'Rewrite this text to be professional, clear and concise:\n\n[TEXT]' },
+  { name: 'Kirjoita sähköposti', prompt: 'Write a clear, professional email based on the following notes. Include a subject line:\n\n[TEXT]' },
   { name: 'Kysy lisää',          prompt: 'I have the following notes. Ask me three clarifying questions to help me think this through better:\n\n[TEXT]' },
 ];
 
@@ -1644,6 +1645,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v29</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v30</div>
 </body>
 </html>
