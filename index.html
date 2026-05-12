@@ -459,7 +459,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v25</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v26</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -838,25 +838,24 @@ function render() {
   const fActive  = filtered(active);
   let html = '';
 
-  if (view === 'list') {
-    html += '<div class="list-view" id="listView">';
-    if (fActive.length === 0) {
-      html += '<div class="empty">Ei lappuja. Valitse label tai lisää uusi.</div>';
+  html += '<div class="list-view" id="listView">';
+  if (fActive.length === 0) {
+    html += '<div class="empty">Ei lappuja. Valitse label tai lisää uusi.</div>';
+  } else {
+    const hasGroups = fActive.some(p => p.group);
+    if (!hasGroups) {
+      fActive.forEach(p => { html += card(p, 'list'); });
     } else {
-      const hasGroups = fActive.some(p => p.group);
-      if (!hasGroups) {
-        fActive.forEach(p => { html += card(p, 'list'); });
-      } else {
-        const ungrouped = fActive.filter(p => !p.group);
-        ungrouped.forEach(p => { html += card(p, 'list'); });
-        const groups = [...new Set(fActive.filter(p => p.group).map(p => p.group))];
-        groups.forEach(g => {
-          html += `<div class="group-header"><i data-lucide="${esc(g)}" style="width:14px;height:14px"></i></div>`;
-          fActive.filter(p => p.group === g).forEach(p => { html += card(p, 'list'); });
-        });
-      }
+      const ungrouped = fActive.filter(p => !p.group);
+      ungrouped.forEach(p => { html += card(p, 'list'); });
+      const groups = [...new Set(fActive.filter(p => p.group).map(p => p.group))];
+      groups.forEach(g => {
+        html += `<div class="group-header"><i data-lucide="${esc(g)}" style="width:14px;height:14px"></i></div>`;
+        fActive.filter(p => p.group === g).forEach(p => { html += card(p, 'list'); });
+      });
     }
-    html += '</div>';
+  }
+  html += '</div>';
 
   // Archive
   if (archived.length > 0) {
@@ -1441,6 +1440,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v25</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v26</div>
 </body>
 </html>
