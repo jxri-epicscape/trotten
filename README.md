@@ -1,31 +1,49 @@
 # Trotten
 
-A lightweight, single-file project management app that runs entirely in your browser — no server, no installation, no subscription.
+A lightweight, single-file workspace that lives in your browser. No installation, no account, no subscription. Open the URL and you're in.
 
-Built for personal use across multiple devices (iPhone, Mac, Windows) using GitHub Pages for hosting and GitHub Gist for cloud sync.
+Built for people who work across multiple devices and need one place to capture, organize and act on information — without committing to a complex tool.
 
 ---
 
-## What is it?
+## What it is
 
-Trotten is a dark-themed project and task manager packed into one `index.html` file. Everything — the UI, logic, and styles — lives in that single file. Your data is stored in a private GitHub Gist, so it syncs automatically across every device you use.
+Trotten is a note and task manager packed into one `index.html` file. Everything — UI, logic, styles — lives in that single file. Your data is stored in private GitHub Gists, so it syncs automatically across every device. Multiple Gists let you switch between different workspaces or share a Gist with someone else.
 
-**Core features:**
+---
 
-- Add, edit, reorder and archive projects via drag & drop
-- Kanban view (Planning / In Progress / Done) or list view
-- Subtasks with progress bar
-- Deadlines with countdown (today, tomorrow, X days, X weeks)
+## Features
+
+**Capture**
+- Quick capture bar — type and press Enter, note is saved instantly
+- Post-it bar — freeform multi-line note, first line becomes the title
+- Paste an image (`⌘+V` / `Ctrl+V`) — Trotten reads the text from the image using AI and offers it as a new note for editing before saving
+
+**Organize**
+- Four labels: ⚡ Urgent · 🌿 Cannabis · ◆ Shapes · 💡 Lamp — or leave unlabeled
 - Color stripes for visual grouping
-- Category icons (7 Lucide icons as category markers)
-- Draft cards — quick capture bar with yellow border, attach content to any project as subtasks
-- Search and filter by status, color, category
-- Time tracking (estimated vs logged hours)
-- JSON export / import (also supports todo.json format)
-- Archive with a dedicated toggle in the header
-- Cross-device sync via GitHub Gist (automatic, debounced)
-- Works as a home screen app on iPhone (Add to Home Screen)
-- No frameworks, no build step, no dependencies except Lucide icons via CDN
+- Deadlines with countdown (today, tomorrow, X days, X weeks, overdue warning)
+- Archive — swipe a note away when done, retrieve it anytime
+
+**Act**
+- AI Actions on every note — opens Claude.ai in a new tab with the note content pre-loaded into one of five prompts:
+  - **Summarize** — three bullet points
+  - **Next steps** — prioritized action list
+  - **Code** — transform ideas into a code snippet
+  - **Rewrite** — professional, clear, concise
+  - **Ask more** — Claude asks three clarifying questions
+- Copy note content to clipboard in one click
+- Attach a Post-it note to another note (content appended)
+
+**Sync**
+- Data stored in your own private GitHub Gist — no Trotten server involved
+- Multiple Gists with instant switching — separate workspaces for home, work, or shared projects
+- Share a Gist with anyone: same token, different Gist ID = shared workspace without user accounts
+- Works on iPhone, Mac, Windows, any browser
+
+**Export / Import**
+- JSON export at any time — your data, your file
+- JSON import — supports native Trotten format and `todo.json` format
 
 ---
 
@@ -33,26 +51,24 @@ Trotten is a dark-themed project and task manager packed into one `index.html` f
 
 ### What you need
 
-- A **GitHub account**
-- A **GitHub Personal Access Token** with `gist` scope
-- The app hosted on **GitHub Pages** (or just opened locally)
+- A GitHub account
+- A GitHub Personal Access Token with `gist` scope
+- The app hosted on GitHub Pages (or opened locally in Chrome)
 
 ---
 
 ### Step 1 — Host the app
 
-**Option A — GitHub Pages (recommended, works on all devices)**
+**GitHub Pages (recommended)**
 
-1. Fork or clone this repository, or create a new repo and upload `index.html`
-2. Go to **Settings → Pages**
-3. Set source to `main` branch, root folder
-4. Save — your app will be live at `https://yourusername.github.io/Trotten/`
+1. Fork this repo or upload `index.html` to a new repository
+2. Go to **Settings → Pages**, set source to `main` branch, root folder
+3. Your app is live at `https://yourusername.github.io/trotten/`
 
-**Option B — Local**
+**Local**
+Open `index.html` directly in Chrome. Sync still works.
 
-Just open `index.html` in Chrome or any modern browser. Cross-device sync still works as long as you open the same file or the Pages URL on each device.
-
-> ⚠️ Safari on iOS works fine. Safari on macOS may block cross-origin requests to the GitHub API — use Chrome on Mac if you run into issues.
+> Safari on macOS may block GitHub API requests. Use Chrome on Mac if you run into issues. Safari on iOS works fine.
 
 ---
 
@@ -60,44 +76,71 @@ Just open `index.html` in Chrome or any modern browser. Cross-device sync still 
 
 1. Go to [github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
 2. Click **Generate new token (classic)**
-3. Give it a name (e.g. `trotten`)
-4. Select **only** the `gist` scope — nothing else
-5. Click **Generate token** and copy it immediately
+3. Select **only** the `gist` scope
+4. Copy the token immediately
 
 ---
 
 ### Step 3 — First launch
 
-When you open the app for the first time, a setup screen appears:
+A setup screen appears on first open:
 
-1. Paste your token into the **GitHub Token** field
-2. Choose one of two options:
-
-   - **New Gist** — the app creates a new private Gist automatically. Done.
-   - **Connect existing** — paste an existing Gist ID, or click **Hae lista** (Fetch list) to see all your Trotten Gists and pick one with a click
-
+1. Paste your token
+2. Choose **New Gist** (created automatically) or **Connect existing** (paste ID or click Fetch to see your Gists)
 3. Click **Aloita →**
 
-Your token and Gist ID are stored in `localStorage` on that device. Repeat Step 3 on each new device — point them all to the same Gist ID for full sync.
+Token and Gist ID are stored in `localStorage` per device. Repeat on each device, point them to the same Gist ID.
 
 ---
 
-### Step 4 — iPhone home screen
+### Step 4 — Add more Gists
+
+Open **Settings** (sliders icon, top right):
+
+- Your existing Gist appears automatically as "Oletus"
+- Click **+ Lisää Gist** to add more workspaces
+- Give each a name, paste the Gist ID
+- Switch between them instantly with the arrow button — Trotten saves to whichever is active
+
+To share a workspace: give someone your Gist ID. They add it in their Settings with their own token. Both of you read and write to the same data.
+
+---
+
+### Step 5 — Enable image-to-text (optional)
+
+1. Get an [Anthropic API key](https://console.anthropic.com/)
+2. Open **Settings → Anthropic API** and paste your key
+3. Copy any image to your clipboard (`⌘+V` / `Ctrl+V` anywhere in Trotten)
+4. Trotten sends the image to Claude Haiku, strips formatting, and shows you clean editable text
+5. Review, edit if needed, and save as a new note
+
+Cost: approximately $0.002 per image using Claude Haiku. Your key, your bill — Trotten never touches it.
+
+> Works in Chrome. Safari does not support `navigator.clipboard.read()` for images.
+
+---
+
+### Step 6 — iPhone home screen
 
 1. Open the app URL in Safari on iPhone
-2. Tap the **Share** button (square with arrow)
-3. Tap **Add to Home Screen**
-4. Name it `Trotten` and tap **Add**
+2. Tap **Share → Add to Home Screen**
+3. Name it Trotten, tap Add
 
-The app opens full screen like a native app.
+Opens full screen like a native app.
 
 ---
 
-## How sync works
+## AI Actions
 
-Every change (new project, edit, reorder, status change) triggers a debounced auto-save that fires 1.5 seconds after the last action. The app sends a PATCH request to the GitHub Gist API and stores the full data as `trotten-data.json`. On load, it fetches the latest version from the Gist.
+Every note has a ✨ button. Click it to choose a preset — Trotten builds a prompt with your note content and opens Claude.ai in a new tab with everything pre-filled. No API key needed for this feature.
 
-There is no real-time sync — if you have the app open on two devices simultaneously, the last save wins. For personal use this is rarely an issue.
+| Preset | What it does |
+|---|---|
+| Summarize | Three concise bullet points |
+| Next steps | Prioritized action list |
+| Code | Turns ideas into a code snippet |
+| Rewrite | Professional, clear, concise version |
+| Ask more | Claude asks three clarifying questions |
 
 ---
 
@@ -105,56 +148,64 @@ There is no real-time sync — if you have the app open on two devices simultane
 
 | Key | Action |
 |---|---|
-| `N` | New project (when no input is focused) |
-| `Enter` | Save project (in modal) or quick-add (in capture bar) |
-| `Ctrl / ⌘ + Enter` | Save project from modal |
+| `N` | New note (when no input focused) |
+| `Enter` | Save (in quick capture or modal) |
+| `⌘ / Ctrl + Enter` | Save from modal |
+| `⌘ / Ctrl + V` | Paste image → extract text |
 | `Esc` | Close modal |
 
 ---
 
-## Data format
+## How sync works
 
-Data is stored as JSON in your private Gist:
+Every change triggers a debounced auto-save (1.5s after last action) — a PATCH request to the GitHub Gist API. On load, the latest version is fetched from the active Gist.
+
+No real-time sync between devices. If the app is open on two devices simultaneously, last save wins. For personal use this is rarely a problem.
+
+---
+
+## Data format
 
 ```json
 {
   "projects": [
     {
       "id": "abc123",
-      "title": "Project name",
-      "desc": "Notes...",
+      "title": "Note title",
+      "desc": "Content...",
       "status": "todo",
-      "priority": "",
-      "deadline": "2026-05-01",
-      "est": 4,
-      "logged": 1.5,
+      "deadline": "2026-06-01",
       "color": "#ff4757",
-      "group": "shapes",
-      "subs": [{ "id": "x1", "title": "Subtask", "done": false }],
+      "group": "zap",
       "archived": false,
       "draft": false,
-      "createdAt": "2026-04-01T10:00:00.000Z",
-      "updatedAt": "2026-04-28T08:30:00.000Z"
+      "createdAt": "2026-05-01T10:00:00.000Z",
+      "updatedAt": "2026-05-12T08:30:00.000Z"
     }
   ],
   "view": "list"
 }
 ```
 
-You can export a backup at any time via the **JSON** menu in the header, and import it back later (supports both Trotten native format and `todo.json` format).
-
 ---
 
 ## Tech
 
-- Vanilla HTML / CSS / JavaScript — no frameworks
+- Vanilla HTML / CSS / JavaScript — no frameworks, no build step
 - [Lucide Icons](https://lucide.dev) via CDN
-- GitHub Gist API for storage
-- GitHub Pages for hosting
-- `localStorage` for config (token + Gist ID per device)
+- GitHub Gist API — storage and sync
+- GitHub Pages — hosting
+- Claude Haiku (Anthropic API) — image-to-text, optional
+- `localStorage` — stores token and Gist config per device
+
+---
+
+## Philosophy
+
+Trotten doesn't try to be everything. It's fast to open, fast to use, and easy to leave. Your data is a plain JSON file in your own GitHub account. If Trotten disappears tomorrow, your notes are still there.
 
 ---
 
 ## License
 
-MIT — do whatever you want with it.
+MIT
