@@ -366,7 +366,10 @@
     .hidden { display: none !important; }
 
     /* ── SAVE STATUS ── */
-    .save-status { font-size: 12px; color: var(--muted); margin-left: 4px; }
+    .save-status {
+      font-size: 11px; color: var(--muted);
+      min-width: 80px; white-space: nowrap;
+    }
     .save-status.err { color: var(--danger); }
 
     /* ── SETUP OVERLAY ── */
@@ -456,15 +459,14 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v22</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v23</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
   <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="search"></i></button>
-  <button class="hdr-btn" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
-  <button class="hdr-btn" id="vKanban" onclick="setView('kanban')" title="Kanban"><i data-lucide="grid-2x2"></i></button>
+  <button class="hdr-btn active" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
 
   <div class="dd-wrap">
     <button class="hdr-btn text-btn" onclick="toggleJsonMenu()">JSON</button>
@@ -768,8 +770,7 @@ function finishSetup() {
   document.getElementById('setupOverlay').classList.add('hidden');
   loadFromGist().then(() => {
     document.getElementById('vList').classList.toggle('active', view === 'list');
-    document.getElementById('vKanban').classList.toggle('active', view === 'kanban');
-    render();
+      render();
   });
 }
 
@@ -933,7 +934,7 @@ function card(p, mode) {
   } else {
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
-      <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi / Valmis"><i data-lucide="bookmark-check"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
       ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä projektiin"><i data-lucide="link"></i></button>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
     </div>`;
@@ -1466,11 +1467,10 @@ if (!cfg.token || !cfg.gistId) {
 } else {
   loadFromGist().then(() => {
     document.getElementById('vList').classList.toggle('active', view === 'list');
-    document.getElementById('vKanban').classList.toggle('active', view === 'kanban');
-    render();
+      render();
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v22</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v23</div>
 </body>
 </html>
