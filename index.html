@@ -459,7 +459,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v26</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v27</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -768,7 +768,7 @@ async function doSetup() {
 function finishSetup() {
   document.getElementById('setupOverlay').classList.add('hidden');
   loadFromGist().then(() => {
-    document.getElementById('vList').classList.toggle('active', view === 'list');
+
       render();
   });
 }
@@ -1435,11 +1435,11 @@ if (!cfg.token || !cfg.gistId) {
   document.getElementById('setupOverlay').classList.remove('hidden');
 } else {
   loadFromGist().then(() => {
-    document.getElementById('vList').classList.toggle('active', view === 'list');
+
       render();
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v26</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v27</div>
 </body>
 </html>
