@@ -314,6 +314,13 @@
       font-size: 12px; color: #3a3a3a; padding-right: 14px; white-space: nowrap;
     }
 
+    /* ── SETTINGS ── */
+    .settings-section { border: 1px solid var(--border); border-radius: var(--r); padding: 16px; }
+    .settings-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 14px; }
+    .gist-slot { display: flex; gap: 6px; align-items: center; }
+    .gist-slot input { flex: 1; padding: 7px 10px; font-size: 13px; }
+    .gist-slot-active { border-color: var(--accent) !important; }
+
     /* ── EXPAND TOGGLE ── */
     .expand-toggle {
       flex: 1; padding: 7px 11px; border-radius: var(--r);
@@ -459,7 +466,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v27</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v28</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -475,6 +482,7 @@
     </div>
   </div>
   <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
+  <button class="hdr-btn" onclick="openSettings()" title="Asetukset"><i data-lucide="sliders-horizontal"></i></button>
 
 </header>
 
@@ -616,6 +624,47 @@
       <button class="btn btn-primary" onclick="doSetup()">Aloita →</button>
     </div>
     <p class="setup-status" id="setupStatus"></p>
+  </div>
+</div>
+
+<!-- ── SETTINGS OVERLAY ── -->
+<div class="overlay hidden" id="settingsOverlay" onclick="settingsOverlayClick(event)">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+      <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px">
+        <i data-lucide="sliders-horizontal"></i> Asetukset
+      </div>
+      <button onclick="closeSettings()" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:2px"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+
+    <!-- GISTIT -->
+    <div class="settings-section">
+      <div class="settings-section-title">Gistit</div>
+      <div class="fg">
+        <label class="fl">GitHub Token</label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="sToken" type="password" placeholder="ghp_..." style="flex:1">
+          <button class="btn btn-ghost btn-sm" onclick="saveSettingsToken()">Tallenna</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:6px">
+        <label class="fl">Gistit</label>
+        <div id="gistSlots" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;margin-top:4px" onclick="addGistSlot()">
+        <i data-lucide="plus"></i> Lisää Gist
+      </button>
+    </div>
+
+    <!-- API -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">Anthropic API <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:6px">tulossa — kuva → teksti</span></div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">API-avain</label>
+        <input class="fi" id="sAnthropicKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed">
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1002,6 +1051,93 @@ function del(id, e) {
   triggerSave(); render(); toast('Poistettu!');
 }
 function toggleArch() { showArchive = !showArchive; render(); }
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+
+function openSettings() {
+  document.getElementById('settingsOverlay').classList.remove('hidden');
+  document.getElementById('sToken').value = cfg.token || '';
+  renderGistSlots();
+  lucide.createIcons();
+}
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.add('hidden');
+}
+function settingsOverlayClick(e) {
+  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+}
+
+function saveSettingsToken() {
+  const t = document.getElementById('sToken').value.trim();
+  if (!t) return;
+  cfg.token = t;
+  saveCfg();
+  toast('Token tallennettu!');
+}
+
+function renderGistSlots() {
+  const slots = cfg.gists || [];
+  const el = document.getElementById('gistSlots');
+  if (slots.length === 0) {
+    // migrate existing single gist
+    if (cfg.gistId) {
+      cfg.gists = [{ name: 'Oletus', id: cfg.gistId, active: true }];
+      saveCfg();
+      return renderGistSlots();
+    }
+    el.innerHTML = '<p style="font-size:12px;color:var(--muted)">Ei Gistejä. Lisää alla.</p>';
+    return;
+  }
+  el.innerHTML = slots.map((g, i) => `
+    <div class="gist-slot">
+      <input class="fi ${g.active ? 'gist-slot-active' : ''}" type="text"
+        value="${esc(g.name)}" placeholder="Nimi"
+        style="max-width:120px"
+        onchange="updateGistName(${i}, this.value)">
+      <input class="fi" type="text"
+        value="${esc(g.id)}" placeholder="Gist ID"
+        onchange="updateGistId(${i}, this.value)">
+      <button class="btn btn-ghost btn-sm" onclick="switchGist(${i})" title="Vaihda tähän"
+        style="display:inline-flex;align-items:center;white-space:nowrap;${g.active ? 'color:var(--accent)' : ''}">
+        <i data-lucide="${g.active ? 'check' : 'arrow-right-left'}"></i>
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="removeGistSlot(${i})" title="Poista"
+        style="display:inline-flex;align-items:center;color:var(--muted)">
+        <i data-lucide="trash-2"></i>
+      </button>
+    </div>`).join('');
+  lucide.createIcons();
+}
+
+function addGistSlot() {
+  cfg.gists = cfg.gists || [];
+  cfg.gists.push({ name: 'Uusi', id: '', active: false });
+  saveCfg();
+  renderGistSlots();
+}
+
+function updateGistName(i, v) {
+  cfg.gists[i].name = v; saveCfg();
+}
+function updateGistId(i, v) {
+  cfg.gists[i].id = v.trim(); saveCfg();
+}
+function removeGistSlot(i) {
+  cfg.gists.splice(i, 1); saveCfg(); renderGistSlots();
+}
+
+async function switchGist(i) {
+  const g = cfg.gists[i];
+  if (!g.id) { toast('Syötä Gist ID ensin.'); return; }
+  cfg.gists.forEach((x, j) => x.active = j === i);
+  cfg.gistId = g.id;
+  saveCfg();
+  renderGistSlots();
+  setStatus('Ladataan...');
+  await loadFromGist();
+  render();
+  toast(`Vaihdettu: ${g.name}`);
+}
 function toggleArchView() {
   showArchive = !showArchive;
   document.getElementById('archBtn').classList.toggle('filter-active', showArchive);
@@ -1429,6 +1565,11 @@ document.addEventListener('keydown', e => {
 // ── INIT ───────────────────────────────────────────────────────────────────
 
 loadCfg();
+// Migroi vanhat yksittäiset gistit listaksi
+if (cfg.gistId && !cfg.gists) {
+  cfg.gists = [{ name: 'Oletus', id: cfg.gistId, active: true }];
+  saveCfg();
+}
 lucide.createIcons();
 renderLabelBar();
 if (!cfg.token || !cfg.gistId) {
@@ -1440,6 +1581,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v27</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v28</div>
 </body>
 </html>
