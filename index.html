@@ -445,6 +445,32 @@
     }
     .dd-menu button:hover { background: var(--border); }
 
+    /* ── GIST SWITCHER ── */
+    .gist-switcher-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      height: 34px; padding: 0 10px;
+      border-radius: var(--r); border: 1px solid #3a3a3a;
+      background: none; color: var(--muted); cursor: pointer;
+      font-size: 12px; font-weight: 500; font-family: inherit;
+      transition: color .15s, border-color .15s; white-space: nowrap;
+      max-width: 130px;
+    }
+    .gist-switcher-btn:hover { color: var(--text); border-color: #5a5a5a; }
+    .gist-switcher-btn i[data-lucide] svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .gist-switcher-name { overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+    .gist-switcher-menu {
+      position: absolute; top: calc(100% + 6px); left: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); min-width: 160px; z-index: 150; overflow: hidden;
+    }
+    .gist-switcher-menu button {
+      display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+      padding: 10px 14px; font-size: 13px; background: none;
+      border: none; color: var(--text); cursor: pointer; white-space: nowrap;
+    }
+    .gist-switcher-menu button:hover { background: var(--border); }
+    .gist-switcher-menu .gsm-divider { height: 1px; background: var(--border); margin: 2px 0; }
+
     /* ── EXTRA FIELDS TOGGLE ── */
     .extra-toggle {
       font-size: 12px; color: var(--muted); cursor: pointer;
@@ -466,8 +492,18 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v31</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v32</span>
   </span>
+
+  <div class="dd-wrap" id="gistSwitcherWrap">
+    <button class="gist-switcher-btn" onclick="toggleGistSwitcher()" id="gistSwitcherBtn">
+      <i data-lucide="layers-2"></i>
+      <span class="gist-switcher-name" id="gistSwitcherName">—</span>
+      <i data-lucide="chevron-down" id="gistSwitcherChev" style="width:11px;height:11px;margin-left:1px"></i>
+    </button>
+    <div class="gist-switcher-menu hidden" id="gistSwitcherMenu"></div>
+  </div>
+
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
@@ -1197,6 +1233,7 @@ async function switchGist(i) {
   cfg.gistId = g.id;
   saveCfg();
   renderGistSlots();
+  renderGistSwitcher();
   setStatus('Ladataan...');
   await loadFromGist();
   render();
@@ -1206,6 +1243,58 @@ function toggleArchView() {
   showArchive = !showArchive;
   document.getElementById('archBtn').classList.toggle('filter-active', showArchive);
   render();
+}
+
+// ── GIST SWITCHER ──────────────────────────────────────────────────────────
+
+function renderGistSwitcher() {
+  const gists = cfg.gists || [];
+  const active = gists.find(g => g.active);
+  const nameEl = document.getElementById('gistSwitcherName');
+  if (nameEl) nameEl.textContent = active ? active.name : (gists.length ? gists[0].name : '—');
+
+  const menu = document.getElementById('gistSwitcherMenu');
+  if (!menu) return;
+
+  let html = '';
+  if (gists.length === 0) {
+    html = `<button onclick="openSettings();closeGistSwitcher()">Lisää Gist →</button>`;
+  } else {
+    html = gists.map((g, i) =>
+      `<button onclick="switchGistFromHeader(${i})" style="${g.active ? 'color:var(--accent);font-weight:600' : ''}">
+        <i data-lucide="${g.active ? 'check' : 'circle'}" style="width:12px;height:12px;flex-shrink:0;opacity:${g.active ? '1' : '0.3'}"></i>
+        ${esc(g.name)}
+      </button>`
+    ).join('');
+    html += `<div class="gsm-divider"></div>
+      <button onclick="openSettings();closeGistSwitcher()" style="color:var(--muted);font-size:12px">
+        <i data-lucide="settings-2" style="width:12px;height:12px;flex-shrink:0"></i>
+        Hallitse Gistejä
+      </button>`;
+  }
+  menu.innerHTML = html;
+  lucide.createIcons();
+}
+
+function toggleGistSwitcher() {
+  const menu = document.getElementById('gistSwitcherMenu');
+  const open = menu.classList.toggle('hidden') === false;
+  document.getElementById('gistSwitcherChev').setAttribute('data-lucide', open ? 'chevron-up' : 'chevron-down');
+  lucide.createIcons();
+  if (open) renderGistSwitcher();
+}
+
+function closeGistSwitcher() {
+  const menu = document.getElementById('gistSwitcherMenu');
+  if (!menu) return;
+  menu.classList.add('hidden');
+  const chev = document.getElementById('gistSwitcherChev');
+  if (chev) { chev.setAttribute('data-lucide', 'chevron-down'); lucide.createIcons(); }
+}
+
+async function switchGistFromHeader(i) {
+  closeGistSwitcher();
+  await switchGist(i);
 }
 
 // ── POST-IT ────────────────────────────────────────────────────────────────
@@ -1423,6 +1512,7 @@ function closeJsonMenu() {
 
 document.addEventListener('click', e => {
   if (!e.target.closest('.dd-wrap')) closeJsonMenu();
+  if (!e.target.closest('#gistSwitcherWrap')) closeGistSwitcher();
 });
 
 // ── MODAL ──────────────────────────────────────────────────────────────────
@@ -1636,15 +1726,15 @@ if (cfg.gistId && !cfg.gists) {
 }
 lucide.createIcons();
 renderLabelBar();
+renderGistSwitcher();
 if (!cfg.token || !cfg.gistId) {
   document.getElementById('setupOverlay').classList.remove('hidden');
 } else {
   loadFromGist().then(() => {
-
-      render();
+    render();
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v31</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v32</div>
 </body>
 </html>
