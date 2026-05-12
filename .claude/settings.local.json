@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rename \"C:\\\\Users\\\\Jxri\\\\Trotten\\\\projektihallinta.html\" \"index.html\")"
+    ]
+  }
+}

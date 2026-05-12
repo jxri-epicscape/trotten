@@ -280,23 +280,21 @@
       padding: 10px 14px; border-top: 1px solid var(--border);
     }
 
-    /* ── QUICK CAPTURE ── */
-    .quick-capture {
-      max-width: 860px; margin: 0 auto 16px;
-      display: flex; align-items: center;
-      background: var(--surface); border: 1px solid var(--success);
-      border-radius: var(--r); overflow: hidden;
-      transition: border-color .15s;
+    /* ── LABEL BAR ── */
+    .label-bar {
+      max-width: 860px; margin: 0 auto 12px;
+      display: flex; gap: 8px;
     }
-    .quick-capture:focus-within { border-color: #54f09a; box-shadow: 0 0 0 3px rgba(46,213,115,.15); }
-    .quick-capture input {
-      flex: 1; padding: 13px 16px; font-size: 15px;
-      background: none; border: none; color: var(--text); outline: none;
+    .label-bar-btn {
+      flex: 1; height: 44px; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
     }
-    .quick-capture input::placeholder { color: var(--muted); }
-    .quick-capture-hint {
-      font-size: 12px; color: #3a3a3a; padding-right: 14px; white-space: nowrap;
-    }
+    .label-bar-btn:hover { border-color: #4a4a4a; color: var(--text); }
+    .label-bar-btn.label-none { font-size: 12px; font-family: inherit; gap: 5px; }
+    .label-bar-btn i[data-lucide] svg { width: 18px; height: 18px; }
 
     /* ── POSTIT CAPTURE ── */
     .postit-capture {
@@ -458,13 +456,13 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v21</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v22</span>
   </span>
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
   <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
-  <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="eye"></i></button>
+  <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="search"></i></button>
   <button class="hdr-btn" id="vList" onclick="setView('list')" title="Lista"><i data-lucide="rows-3"></i></button>
   <button class="hdr-btn" id="vKanban" onclick="setView('kanban')" title="Kanban"><i data-lucide="grid-2x2"></i></button>
 
@@ -491,7 +489,7 @@
     <div class="postit-foot">
       <button class="btn btn-ghost btn-sm" onclick="closePostit()">Peruuta</button>
       <button class="btn btn-success" onclick="savePostit()" style="display:inline-flex;align-items:center;gap:6px">
-        <i data-lucide="bookmark-plus"></i> Tallenna
+        <i data-lucide="archive"></i> Tallenna
       </button>
     </div>
   </div>
@@ -503,7 +501,7 @@
     <div class="modal-title" style="display:flex;align-items:center;gap:8px">
       <i data-lucide="link"></i> Liitä projektiin
     </div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Sisältö lisätään alatehtävänä valittuun projektiin.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Sisältö liitetään valitun lapun sisältöön.</p>
     <div id="attachList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeAttach()">Peruuta</button>
@@ -513,23 +511,14 @@
 
 <div class="filter-panel hidden" id="filterPanel">
   <input class="search" id="qSearch" type="text" placeholder="Hae..." oninput="render()">
-  <select class="fsel" id="fStatus" onchange="render()">
-    <option value="">Kaikki tilat</option>
-    <option value="todo">Suunnittelussa</option>
-    <option value="inprogress">Työn alla</option>
-  </select>
-<select class="fsel" id="fColor" onchange="render()">
+  <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
   </select>
   <div class="cat-filter" id="catFilter"></div>
 </div>
 
 <div class="main" style="padding-bottom:0;padding-top:16px">
-  <div class="quick-capture">
-    <input type="text" id="quickInput" placeholder="Lisää projekti"
-      onkeydown="if(event.key==='Enter')quickAdd(this)">
-    <span class="quick-capture-hint">Enter ↵</span>
-  </div>
+  <div class="label-bar" id="labelBar"></div>
   <div class="postit-capture">
     <input type="text" id="postitInput" placeholder="Lisää sisältö"
       onkeydown="if(event.key==='Enter')quickPostit(this)">
@@ -542,19 +531,19 @@
 <div class="overlay hidden" id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modal">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div class="modal-title" id="mTitle" style="margin-bottom:0">Uusi projekti</div>
+      <div class="modal-title" id="mTitle" style="margin-bottom:0">Uusi lappu</div>
       <button onclick="closeModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:2px" title="Sulje"><i data-lucide="x" style="width:18px;height:18px"></i></button>
     </div>
 
     <div class="fg">
-      <label class="fl">Nimi *</label>
-      <input class="fi" id="mName" type="text" placeholder="Projektin nimi">
+      <label class="fl">Otsikko *</label>
+      <input class="fi" id="mName" type="text" placeholder="Otsikko...">
     </div>
 
     <div class="fg" style="margin-bottom:8px">
       <div style="display:flex;gap:8px">
         <button class="expand-toggle" id="catToggle" onclick="toggleCatExpand()" type="button">
-          Kategoria <i data-lucide="chevron-down" id="catChev" style="width:13px;height:13px;margin-left:auto"></i>
+          Label <i data-lucide="chevron-down" id="catChev" style="width:13px;height:13px;margin-left:auto"></i>
         </button>
         <button class="expand-toggle" id="colorToggle" onclick="toggleColorExpand()" type="button">
           Väri <i data-lucide="chevron-down" id="colorChev" style="width:13px;height:13px;margin-left:auto"></i>
@@ -573,23 +562,14 @@
       <textarea class="fta" id="mDesc" placeholder="Sisältö, muistiinpanot..." style="min-height:100px"></textarea>
     </div>
 
-    <div class="fr">
-      <div class="fg">
-        <label class="fl">Tila</label>
-        <select class="fi" id="mStatus">
-          <option value="todo">Suunnittelussa</option>
-          <option value="inprogress">Työn alla</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">Deadline</label>
-        <input class="fi" id="mDeadline" type="date">
-      </div>
+    <div class="fg">
+      <label class="fl">Deadline</label>
+      <input class="fi" id="mDeadline" type="date">
     </div>
 
     <div class="modal-foot">
       <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="bookmark-plus"></i> Tallenna</button>
+      <button class="btn btn-primary" onclick="saveProject()" style="display:flex;align-items:center;gap:6px"><i data-lucide="archive"></i> Tallenna</button>
     </div>
   </div>
 </div>
@@ -649,7 +629,7 @@ const COLORS = [
   { name: 'Valkoinen', hex: '#e0e0e0' },
 ];
 
-const CATEGORIES = ['cannabis','command','hand-metal','type-outline','search-alert','shapes','lamp-desk'];
+const CATEGORIES = ['zap','cannabis','shapes','lamp-desk'];
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 
@@ -834,11 +814,9 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 
 function filtered(list) {
   const q  = document.getElementById('qSearch').value.trim().toLowerCase();
-  const fs = document.getElementById('fStatus').value;
   const fc = document.getElementById('fColor').value;
   return list.filter(p => {
     if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
-    if (fs && p.status !== fs) return false;
     if (fc && p.color !== fc) return false;
     if (fCategory && (p.group||'') !== fCategory) return false;
     return true;
@@ -866,7 +844,7 @@ function render() {
   if (view === 'list') {
     html += '<div class="list-view" id="listView">';
     if (fActive.length === 0) {
-      html += '<div class="empty">Ei projekteja. Lisää uusi klikkaamalla "+ Lisää".</div>';
+      html += '<div class="empty">Ei lappuja. Valitse label tai lisää uusi.</div>';
     } else {
       const hasGroups = fActive.some(p => p.group);
       if (!hasGroups) {
@@ -928,6 +906,7 @@ function render() {
   document.getElementById('main').innerHTML = html;
   refreshColorFilter();
   refreshCatFilter();
+  renderLabelBar();
   lucide.createIcons();
 }
 
@@ -940,11 +919,6 @@ function card(p, mode) {
   let badges = '';
   if (p.group) badges += `<span class="pri-icon" title="${esc(p.group)}"><i data-lucide="${esc(p.group)}"></i></span>`;
   if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr} ${countdown(dl, today)}</span>`;
-  if (mode !== 'kanban') {
-    const sl = { todo: ['b-todo','Suunnittelussa'], inprogress: ['b-inprog','Työn alla'] };
-    const [cls, lbl] = sl[p.status||'todo'] || sl.todo;
-    badges += `<span class="badge ${cls}">${lbl}</span>`;
-  }
 
   const tCls = 'card-title';
   const drag = mode !== 'archive' ? `draggable="true" ondragstart="dStart(event,'${p.id}')" ondragend="dEnd(event)"` : '';
@@ -1218,6 +1192,31 @@ function quickPostit(input) {
   toast('Lappu lisätty!');
 }
 
+function renderLabelBar() {
+  const el = document.getElementById('labelBar');
+  if (!el) return;
+  el.innerHTML = CATEGORIES.map(c =>
+    `<button class="label-bar-btn" onclick="quickLabel('${c}')" title="${c}">
+      <i data-lucide="${c}"></i>
+    </button>`
+  ).join('') +
+  `<button class="label-bar-btn label-none" onclick="quickLabel('')">+ Lisää</button>`;
+  lucide.createIcons();
+}
+
+function quickLabel(cat) {
+  openModal(null);
+  if (cat) {
+    mCategory = cat;
+    catOpen = true;
+    document.getElementById('catExpand').classList.remove('hidden');
+    document.getElementById('catToggle').classList.add('open');
+    document.getElementById('catChev').setAttribute('data-lucide', 'chevron-up');
+    renderCatPicker();
+    lucide.createIcons();
+  }
+}
+
 function quickAdd(input) {
   const title = input.value.trim();
   if (!title) return;
@@ -1242,7 +1241,7 @@ function toggleFilterPanel() {
 
 function hasActiveFilters() {
   return fCategory ||
-    ['qSearch','fStatus','fColor'].some(id => document.getElementById(id)?.value);
+    ['qSearch','fColor'].some(id => document.getElementById(id)?.value);
 }
 
 function toggleJsonMenu() {
@@ -1263,11 +1262,9 @@ function openModal(id, e) {
   editingId = id || null;
   const p = id ? projects.find(x => x.id === id) : null;
 
-  document.getElementById('mTitle').textContent = p ? 'Muokkaa projektia' : 'Uusi projekti';
+  document.getElementById('mTitle').textContent = p ? 'Muokkaa' : 'Uusi lappu';
   document.getElementById('mName').value     = p ? p.title : '';
   document.getElementById('mDesc').value     = p ? (p.desc||'') : '';
-
-  document.getElementById('mStatus').value   = p ? (p.status||'todo') : 'todo';
   document.getElementById('mDeadline').value = p ? (p.deadline||'') : '';
   document.getElementById('mArchBtn').style.display = p ? '' : 'none';
 
@@ -1306,7 +1303,7 @@ function saveProject() {
     title:    name,
     desc:     document.getElementById('mDesc').value.trim(),
     priority: '',
-    status:   document.getElementById('mStatus').value,
+    status:   'todo',
     deadline: document.getElementById('mDeadline').value,
     group:    mCategory,
     color:    mColor,
@@ -1319,7 +1316,7 @@ function saveProject() {
     projects.unshift({ id: uid(), archived: false, createdAt: now, ...data });
   }
   triggerSave(); render(); closeModal();
-  toast(editingId ? 'Tallennettu!' : 'Lisätty!');
+  toast(editingId ? 'Tallennettu!' : 'Lappu lisätty!');
 }
 
 function archiveCur() {
@@ -1463,6 +1460,7 @@ document.addEventListener('keydown', e => {
 
 loadCfg();
 lucide.createIcons();
+renderLabelBar();
 if (!cfg.token || !cfg.gistId) {
   document.getElementById('setupOverlay').classList.remove('hidden');
 } else {
@@ -1473,6 +1471,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v21</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v22</div>
 </body>
 </html>
