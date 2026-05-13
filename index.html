@@ -503,7 +503,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v34</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v35</span>
   </span>
 
   <div class="dd-wrap" id="gistSwitcherWrap">
@@ -615,18 +615,9 @@
     </div>
 
     <div class="fg" style="margin-bottom:8px">
-      <div style="display:flex;gap:8px">
-        <button class="expand-toggle" id="catToggle" onclick="toggleCatExpand()" type="button">
-          Label <i data-lucide="chevron-down" id="catChev" style="width:13px;height:13px;margin-left:auto"></i>
-        </button>
-        <button class="expand-toggle" id="colorToggle" onclick="toggleColorExpand()" type="button">
-          Väri <i data-lucide="chevron-down" id="colorChev" style="width:13px;height:13px;margin-left:auto"></i>
-        </button>
-      </div>
-      <div id="catExpand" class="hidden" style="margin-top:10px">
+      <div style="border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px">
         <div class="cat-picker" id="catPicker"></div>
-      </div>
-      <div id="colorExpand" class="hidden" style="margin-top:10px">
+        <div style="height:1px;background:var(--border)"></div>
         <div class="cpicker" id="cpicker"></div>
       </div>
     </div>
@@ -643,7 +634,7 @@
 
     <div class="modal-foot">
       <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      <button class="btn btn-primary" onclick="saveProject()" style="display:inline-flex;align-items:center;gap:6px" title="Tallenna"><i data-lucide="save"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="saveProject()" style="display:inline-flex;align-items:center" title="Tallenna"><i data-lucide="save"></i></button>
     </div>
   </div>
 </div>
@@ -721,6 +712,16 @@
       </button>
     </div>
 
+    <!-- LABELIT -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">Labelit</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Valitse neljä labelia. Klikkaa slottia, sitten ikonia.</p>
+      <div id="labelSlots" style="display:flex;gap:8px;margin-bottom:14px"></div>
+      <input type="text" class="fi" id="labelIconSearch" placeholder="Hae ikonia..." oninput="renderLabelIconGrid()"
+        style="margin-bottom:10px;font-size:13px;padding:6px 10px">
+      <div id="labelIconGrid" style="display:flex;flex-wrap:wrap;gap:5px;max-height:200px;overflow-y:auto"></div>
+    </div>
+
     <!-- AI PALVELU -->
     <div class="settings-section" style="margin-top:20px">
       <div class="settings-section-title">AI-palvelu — Lähetä Promptiksi</div>
@@ -757,7 +758,17 @@ const COLORS = [
   { name: 'Valkoinen', hex: '#e0e0e0' },
 ];
 
-const CATEGORIES = ['zap','cannabis','shapes','lamp-desk'];
+const DEFAULT_LABELS = ['zap','cannabis','shapes','lamp-desk'];
+function getLabels() { return (cfg && cfg.labels) ? cfg.labels : DEFAULT_LABELS; }
+
+const ICON_OPTIONS = [
+  'zap','star','heart','flame','crown','rocket','target','flag','gem','trophy',
+  'leaf','tree-pine','sun','moon','cloud','globe','mountain','waves','compass','snowflake',
+  'home','briefcase','coffee','music','camera','book-open','pen','palette','headphones','dumbbell',
+  'mail','phone','bell','clock','car','plane','bike','shopping-cart','wrench','layers',
+  'code','tag','bookmark','user','shield','key','lock','eye','search','settings',
+  'cannabis','shapes','lamp-desk','sparkles','activity','cpu','database','terminal','wifi','battery',
+];
 
 const AI_SERVICES = [
   { id: 'claude',      name: 'Claude.ai',   url: t => `https://claude.ai/new?q=${encodeURIComponent(t)}` },
@@ -1264,10 +1275,57 @@ function toggleArch() { showArchive = !showArchive; render(); }
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 
+let activeLabelSlot = 0;
+
+function renderLabelSlots() {
+  const labels = getLabels();
+  const el = document.getElementById('labelSlots');
+  if (!el) return;
+  el.innerHTML = labels.map((icon, i) =>
+    `<button class="cat-btn${activeLabelSlot === i ? ' sel' : ''}" onclick="selectLabelSlot(${i})" title="Slot ${i+1}" style="width:46px;height:46px">
+      <i data-lucide="${icon}" style="width:20px;height:20px"></i>
+    </button>`
+  ).join('');
+  lucide.createIcons();
+}
+
+function renderLabelIconGrid() {
+  const q = (document.getElementById('labelIconSearch')?.value || '').toLowerCase();
+  const labels = getLabels();
+  const cur = labels[activeLabelSlot];
+  const list = q ? ICON_OPTIONS.filter(ic => ic.includes(q)) : ICON_OPTIONS;
+  const el = document.getElementById('labelIconGrid');
+  if (!el) return;
+  el.innerHTML = list.map(icon =>
+    `<button class="cat-btn${cur === icon ? ' sel' : ''}" onclick="pickLabelIcon('${icon}')" title="${icon}">
+      <i data-lucide="${icon}"></i>
+    </button>`
+  ).join('');
+  lucide.createIcons();
+}
+
+function selectLabelSlot(i) {
+  activeLabelSlot = i;
+  renderLabelSlots();
+  renderLabelIconGrid();
+}
+
+function pickLabelIcon(icon) {
+  if (!cfg.labels) cfg.labels = [...DEFAULT_LABELS];
+  cfg.labels[activeLabelSlot] = icon;
+  saveCfg();
+  renderLabelSlots();
+  renderLabelIconGrid();
+  renderLabelBar();
+  toast('Label päivitetty!');
+}
+
 function openSettings() {
   document.getElementById('settingsOverlay').classList.remove('hidden');
   document.getElementById('sToken').value = cfg.token || '';
   renderGistSlots();
+  renderLabelSlots();
+  renderLabelIconGrid();
   renderAiSvcPicker();
   renderImgSvcPicker();
   lucide.createIcons();
@@ -1507,25 +1565,6 @@ function normPri(v) {
   return '';
 }
 
-let catOpen = false, colorOpen = false;
-
-function toggleCatExpand() {
-  catOpen = !catOpen;
-  document.getElementById('catExpand').classList.toggle('hidden', !catOpen);
-  document.getElementById('catToggle').classList.toggle('open', catOpen);
-  document.getElementById('catChev').setAttribute('data-lucide', catOpen ? 'chevron-up' : 'chevron-down');
-  if (catOpen) renderCatPicker();
-  lucide.createIcons();
-}
-
-function toggleColorExpand() {
-  colorOpen = !colorOpen;
-  document.getElementById('colorExpand').classList.toggle('hidden', !colorOpen);
-  document.getElementById('colorToggle').classList.toggle('open', colorOpen);
-  document.getElementById('colorChev').setAttribute('data-lucide', colorOpen ? 'chevron-up' : 'chevron-down');
-  if (colorOpen) renderCPicker();
-  lucide.createIcons();
-}
 
 function setCat(cat) {
   mCategory = mCategory === cat ? '' : cat;
@@ -1535,7 +1574,7 @@ function setCat(cat) {
 function renderCatPicker() {
   const el = document.getElementById('catPicker');
   if (!el) return;
-  el.innerHTML = CATEGORIES.map(c =>
+  el.innerHTML = getLabels().map(c =>
     `<button class="cat-btn${mCategory===c?' sel':''}" onclick="setCat('${c}')" title="${c}">
       <i data-lucide="${c}"></i>
     </button>`
@@ -1581,7 +1620,7 @@ function quickPostit(input) {
 function renderLabelBar() {
   const el = document.getElementById('labelBar');
   if (!el) return;
-  el.innerHTML = CATEGORIES.map(c =>
+  el.innerHTML = getLabels().map(c =>
     `<button class="label-bar-btn" onclick="quickLabel('${c}')" title="${c}">
       <i data-lucide="${c}"></i>
     </button>`
@@ -1594,12 +1633,7 @@ function quickLabel(cat) {
   openModal(null);
   if (cat) {
     mCategory = cat;
-    catOpen = true;
-    document.getElementById('catExpand').classList.remove('hidden');
-    document.getElementById('catToggle').classList.add('open');
-    document.getElementById('catChev').setAttribute('data-lucide', 'chevron-up');
     renderCatPicker();
-    lucide.createIcons();
   }
 }
 
@@ -1658,13 +1692,8 @@ function openModal(id, e) {
   mColor    = p ? (p.color||'') : '';
   mCategory = p ? (p.group||'') : '';
 
-  // Reset expand panels
-  catOpen = false; colorOpen = false;
-  document.getElementById('catExpand').classList.add('hidden');
-  document.getElementById('colorExpand').classList.add('hidden');
-  document.getElementById('catToggle').classList.remove('open');
-  document.getElementById('colorToggle').classList.remove('open');
-
+  renderCatPicker();
+  renderCPicker();
   lucide.createIcons();
 
   document.getElementById('overlay').classList.remove('hidden');
@@ -1736,7 +1765,7 @@ function refreshColorFilter() {
 function refreshCatFilter() {
   const el = document.getElementById('catFilter');
   if (!el) return;
-  el.innerHTML = CATEGORIES.map(c =>
+  el.innerHTML = getLabels().map(c =>
     `<button class="cat-filter-btn${fCategory===c?' active':''}" onclick="toggleCatFilter('${c}')" title="${c}">
       <i data-lucide="${c}"></i>
     </button>`
@@ -1862,6 +1891,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v34</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v35</div>
 </body>
 </html>
