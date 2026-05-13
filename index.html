@@ -1064,7 +1064,7 @@ function card(p, mode) {
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä lappuun"><i data-lucide="link"></i></button>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center" title="Liitä lappuun"><i data-lucide="link"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="openAi('${p.id}',event)" style="display:inline-flex;align-items:center" title="AI-toiminnot"><i data-lucide="sparkles"></i></button>
     </div>`;
@@ -1313,12 +1313,18 @@ function selectLabelSlot(i) {
 
 function pickLabelIcon(icon) {
   if (!cfg.labels) cfg.labels = [...DEFAULT_LABELS];
+  const oldIcon = cfg.labels[activeLabelSlot];
   cfg.labels[activeLabelSlot] = icon;
   saveCfg();
+  // Migroi olemassa olevat laput vanhan ikonin nimestä uuteen
+  let migrated = 0;
+  projects.forEach(p => { if (p.group === oldIcon) { p.group = icon; migrated++; } });
+  if (migrated > 0) triggerSave();
   renderLabelSlots();
   renderLabelIconGrid();
   renderLabelBar();
-  toast('Label päivitetty!');
+  render();
+  toast(`Label päivitetty${migrated ? ` · ${migrated} lappua päivitetty` : ''}!`);
 }
 
 function openSettings() {
@@ -1510,10 +1516,10 @@ function openAttach(id, e) {
   attachingId = id;
   const source = projects.find(p => p.id === id);
   if (!source) return;
-  const targets = projects.filter(p => p.id !== id && !p.archived && !p.draft);
+  const targets = projects.filter(p => p.id !== id && !p.archived);
   const list = document.getElementById('attachList');
   list.innerHTML = targets.length === 0
-    ? '<p style="color:var(--muted);font-size:13px">Ei projekteja joihin liittää.</p>'
+    ? '<p style="color:var(--muted);font-size:13px">Ei lappuja joihin liittää.</p>'
     : targets.map(p => `
         <button class="btn btn-ghost" style="text-align:left;display:block;width:100%" onclick="doAttach('${p.id}')">
           ${p.color ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:6px"></span>` : ''}
