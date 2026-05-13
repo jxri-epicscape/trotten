@@ -655,7 +655,7 @@
 
     <div class="fg">
       <label class="fl">GitHub Token</label>
-      <input class="fi" id="setupToken" type="password" placeholder="ghp_...">
+      <input class="fi" id="setupToken" type="password" placeholder="ghp_..." autocomplete="new-password">
     </div>
 
     <div class="setup-tabs">
@@ -700,7 +700,7 @@
       <div class="fg">
         <label class="fl">GitHub Token</label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sToken" type="password" placeholder="ghp_..." style="flex:1">
+          <input class="fi" id="sToken" type="password" placeholder="ghp_..." style="flex:1" autocomplete="new-password">
           <button class="btn btn-ghost btn-sm" onclick="saveSettingsToken()">Tallenna</button>
         </div>
       </div>
@@ -739,7 +739,7 @@
       <div class="fg" style="margin-bottom:0;margin-top:12px">
         <label class="fl" id="imgApiLabel">API-avain</label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed;flex:1">
+          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed;flex:1" autocomplete="new-password">
           <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()" disabled id="saveImgKeyBtn" style="opacity:.4;cursor:not-allowed">Tallenna</button>
         </div>
       </div>
@@ -1363,10 +1363,10 @@ function renderGistSlots() {
     <div class="gist-slot">
       <input class="fi ${g.active ? 'gist-slot-active' : ''}" type="text"
         value="${esc(g.name)}" placeholder="Nimi"
-        style="max-width:120px"
+        style="max-width:120px" autocomplete="off"
         onchange="updateGistName(${i}, this.value)">
       <input class="fi" type="text"
-        value="${esc(g.id)}" placeholder="Gist ID"
+        value="${esc(g.id)}" placeholder="Gist ID" autocomplete="off"
         onchange="updateGistId(${i}, this.value)">
       <button class="btn btn-ghost btn-sm" onclick="switchGist(${i})" title="Vaihda tähän"
         style="display:inline-flex;align-items:center;white-space:nowrap;${g.active ? 'color:var(--accent)' : ''}">
