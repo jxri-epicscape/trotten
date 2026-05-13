@@ -125,12 +125,12 @@
       padding-left: 8px;
     }
     .card-cb { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
-    .card-title { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
+    .card-title { font-size: 14px; font-weight: 600; color: #ffffff; flex: 1; line-height: 1.4; }
     .card-title.done { text-decoration: line-through; color: var(--muted); }
 
     .card-desc {
-      font-size: 12px; color: var(--muted); margin-top: 5px;
-      padding-left: 8px; line-height: 1.5;
+      font-size: 13px; color: var(--text); margin-top: 5px;
+      padding-left: 8px; line-height: 1.55;
       white-space: pre-wrap; word-break: break-word;
     }
 
@@ -503,7 +503,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v33</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v34</span>
   </span>
 
   <div class="dd-wrap" id="gistSwitcherWrap">
@@ -1429,9 +1429,7 @@ function postitOverlayClick(e) {
 function savePostit() {
   const raw = document.getElementById('postitText').value.trim();
   if (!raw) return;
-  const lines = raw.split('\n');
-  const title = lines[0].trim();
-  const desc  = lines.slice(1).join('\n').trim();
+  const { title, desc } = smartSplit(raw);
   const now   = new Date().toISOString();
   projects.unshift({
     id: uid(), title, desc, priority: '', status: 'todo',
@@ -1547,12 +1545,29 @@ function renderCatPicker() {
 
 // ── QUICK ADD ──────────────────────────────────────────────────────────────
 
+// Jos teksti on pitkä ja yhdellä rivillä, pilko automaattisesti:
+// 4 ensimmäistä sanaa = otsikko, loput = sisältö
+function smartSplit(raw) {
+  const lines = raw.split('\n');
+  if (lines.length > 1) {
+    // Monirivinen: 1. rivi = otsikko, loput = sisältö (vanha käyttäytyminen)
+    return { title: lines[0].trim(), desc: lines.slice(1).join('\n').trim() };
+  }
+  // Yksi rivi — laske sanat
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  if (words.length > 10) {
+    return { title: words.slice(0, 4).join(' '), desc: words.slice(4).join(' ') };
+  }
+  return { title: raw.trim(), desc: '' };
+}
+
 function quickPostit(input) {
-  const title = input.value.trim();
-  if (!title) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  const { title, desc } = smartSplit(raw);
   const now = new Date().toISOString();
   projects.unshift({
-    id: uid(), title, desc: '', priority: '', status: 'todo',
+    id: uid(), title, desc, priority: '', status: 'todo',
     deadline: '', est: 0, logged: 0, color: '', group: '',
     subs: [], archived: false, draft: true, createdAt: now, updatedAt: now,
   });
@@ -1847,6 +1862,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v33</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v34</div>
 </body>
 </html>
