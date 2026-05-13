@@ -643,7 +643,7 @@
 
     <div class="modal-foot">
       <button class="btn btn-ghost btn-sm" id="mArchBtn" onclick="archiveCur()" style="margin-right:auto;display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      <button class="btn btn-primary" onclick="saveProject()">Tallenna</button>
+      <button class="btn btn-primary" onclick="saveProject()" style="display:inline-flex;align-items:center;gap:6px" title="Tallenna"><i data-lucide="save"></i></button>
     </div>
   </div>
 </div>
@@ -1050,7 +1050,7 @@ function card(p, mode) {
     </div>`;
   } else {
     actions = `<div class="card-actions">
-      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="bookmark"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
       ${p.draft ? `<button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent)" title="Liitä lappuun"><i data-lucide="link"></i></button>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
