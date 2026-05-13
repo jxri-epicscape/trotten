@@ -372,6 +372,17 @@
 
     .hidden { display: none !important; }
 
+    /* ── AI SERVICE PICKER ── */
+    .ai-svc-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+    .ai-svc-btn {
+      padding: 7px 13px; border-radius: var(--r); border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); cursor: pointer;
+      font-size: 12px; font-weight: 500; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
+    }
+    .ai-svc-btn:hover  { border-color: #5a5a5a; color: var(--text); }
+    .ai-svc-btn.active { border-color: var(--accent); background: rgba(255,255,255,.1); color: var(--accent); }
+
     /* ── SAVE STATUS ── */
     .save-status {
       font-size: 11px; color: var(--muted);
@@ -492,7 +503,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v32</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v33</span>
   </span>
 
   <div class="dd-wrap" id="gistSwitcherWrap">
@@ -551,8 +562,9 @@
     </div>
     <p id="aiCardTitle" style="font-size:13px;color:var(--muted);margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></p>
     <div id="aiPresetList" style="display:flex;flex-direction:column;gap:6px"></div>
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">
-      Avautuu Claude.ai:ssa uuteen välilehteen
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+      <span id="aiSvcLabel">Avautuu uuteen välilehteen</span>
+      <button onclick="closeAi();openSettings()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;font-family:inherit;text-decoration:underline;padding:0">vaihda</button>
     </div>
   </div>
 </div>
@@ -709,12 +721,25 @@
       </button>
     </div>
 
-    <!-- API -->
+    <!-- AI PALVELU -->
     <div class="settings-section" style="margin-top:20px">
-      <div class="settings-section-title">Anthropic API <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:6px">tulossa — kuva → teksti</span></div>
-      <div class="fg" style="margin-bottom:0">
-        <label class="fl">API-avain</label>
-        <input class="fi" id="sAnthropicKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed">
+      <div class="settings-section-title">AI-palvelu — Lähetä Promptiksi</div>
+      <div class="ai-svc-btns" id="aiSvcPicker"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6">
+        Prompt kopioidaan myös leikepöydälle varmuuden vuoksi — voit liittää sen mihin tahansa.
+      </p>
+    </div>
+
+    <!-- KUVA API -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">AI-palvelu — Kuva → teksti <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:6px">tulossa</span></div>
+      <div class="ai-svc-btns" id="imgSvcPicker"></div>
+      <div class="fg" style="margin-bottom:0;margin-top:12px">
+        <label class="fl" id="imgApiLabel">API-avain</label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed;flex:1">
+          <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()" disabled id="saveImgKeyBtn" style="opacity:.4;cursor:not-allowed">Tallenna</button>
+        </div>
       </div>
     </div>
 
@@ -733,6 +758,18 @@ const COLORS = [
 ];
 
 const CATEGORIES = ['zap','cannabis','shapes','lamp-desk'];
+
+const AI_SERVICES = [
+  { id: 'claude',      name: 'Claude.ai',   url: t => `https://claude.ai/new?q=${encodeURIComponent(t)}` },
+  { id: 'chatgpt',     name: 'ChatGPT',     url: t => `https://chatgpt.com/?q=${encodeURIComponent(t)}` },
+  { id: 'perplexity',  name: 'Perplexity',  url: t => `https://www.perplexity.ai/search?q=${encodeURIComponent(t)}` },
+  { id: 'copy',        name: 'Leikepöytä',  url: null },
+];
+
+const IMG_SERVICES = [
+  { id: 'anthropic', name: 'Anthropic', placeholder: 'sk-ant-...' },
+  { id: 'openai',    name: 'OpenAI',    placeholder: 'sk-...' },
+];
 
 const AI_PRESETS = [
   { name: 'Tiivistä',            prompt: 'Summarize the following notes into three concise bullet points:\n\n[TEXT]' },
@@ -1102,6 +1139,12 @@ function openAi(id, e) {
       <span>${esc(pr.name)}</span>
     </button>`
   ).join('');
+  // show active service label
+  const svcId = cfg.aiService || 'claude';
+  const svc   = AI_SERVICES.find(s => s.id === svcId) || AI_SERVICES[0];
+  const lbl   = document.getElementById('aiSvcLabel');
+  if (lbl) lbl.textContent = svc.url ? `Avautuu ${svc.name}:ssa` : 'Kopioidaan leikepöydälle';
+
   document.getElementById('aiOverlay').classList.remove('hidden');
   lucide.createIcons();
 }
@@ -1117,9 +1160,76 @@ function aiOverlayClick(e) {
 
 function runPreset(encodedPrompt, encodedText) {
   const prompt = decodeURIComponent(encodedPrompt).replace('[TEXT]', decodeURIComponent(encodedText));
-  const url = 'https://claude.ai/new?q=' + encodeURIComponent(prompt);
-  window.open(url, '_blank');
+  const svcId  = cfg.aiService || 'claude';
+  const svc    = AI_SERVICES.find(s => s.id === svcId) || AI_SERVICES[0];
+
+  // Always copy to clipboard as fallback
+  navigator.clipboard.writeText(prompt).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = prompt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  });
+
+  if (svc.url) {
+    window.open(svc.url(prompt), '_blank');
+  } else {
+    toast('Prompt kopioitu leikepöydälle!');
+  }
   closeAi();
+}
+
+function renderAiSvcPicker() {
+  const el = document.getElementById('aiSvcPicker');
+  if (!el) return;
+  const cur = cfg.aiService || 'claude';
+  el.innerHTML = AI_SERVICES.map(s =>
+    `<button class="ai-svc-btn${s.id === cur ? ' active' : ''}" onclick="setAiService('${s.id}')">${s.name}</button>`
+  ).join('');
+}
+
+function setAiService(id) {
+  cfg.aiService = id;
+  saveCfg();
+  renderAiSvcPicker();
+  const svc = AI_SERVICES.find(s => s.id === id);
+  toast(`AI: ${svc?.name}`);
+}
+
+function renderImgSvcPicker() {
+  const el = document.getElementById('imgSvcPicker');
+  if (!el) return;
+  const cur = cfg.imgService || 'anthropic';
+  el.innerHTML = IMG_SERVICES.map(s =>
+    `<button class="ai-svc-btn${s.id === cur ? ' active' : ''}" onclick="setImgService('${s.id}')">${s.name}</button>`
+  ).join('');
+  updateImgApiField();
+}
+
+function setImgService(id) {
+  cfg.imgService = id;
+  saveCfg();
+  renderImgSvcPicker();
+}
+
+function updateImgApiField() {
+  const cur = cfg.imgService || 'anthropic';
+  const svc = IMG_SERVICES.find(s => s.id === cur);
+  const inp = document.getElementById('sImgApiKey');
+  const btn = document.getElementById('saveImgKeyBtn');
+  const lbl = document.getElementById('imgApiLabel');
+  if (!inp) return;
+  if (lbl) lbl.textContent = `${svc?.name || ''} API-avain`;
+  inp.placeholder = svc?.placeholder || 'avain...';
+  inp.value = cfg.imgApiKey || '';
+  // disabled until feature ships
+  // inp.disabled = false; inp.style.opacity = '1'; inp.style.cursor = '';
+  // btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = '';
+}
+
+function saveImgApiKey() {
+  cfg.imgApiKey = document.getElementById('sImgApiKey').value.trim();
+  saveCfg();
+  toast('API-avain tallennettu!');
 }
 
 function copyCard(id, e) {
@@ -1158,6 +1268,8 @@ function openSettings() {
   document.getElementById('settingsOverlay').classList.remove('hidden');
   document.getElementById('sToken').value = cfg.token || '';
   renderGistSlots();
+  renderAiSvcPicker();
+  renderImgSvcPicker();
   lucide.createIcons();
 }
 function closeSettings() {
@@ -1735,6 +1847,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v32</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v33</div>
 </body>
 </html>
