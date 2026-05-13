@@ -151,6 +151,15 @@
     .b-done     { background: #2ed57318; color: #2ed573; }
     .b-time     { background: #ffffff0d; color: #888; }
 
+    /* ── HASHTAG BADGES ── */
+    .tag-badge {
+      font-size: 11px; padding: 2px 7px; border-radius: 4px;
+      background: #ffffff0d; color: var(--muted);
+      border: none; font-family: inherit; cursor: pointer;
+      transition: color .12s, background .12s;
+    }
+    .tag-badge:hover { color: var(--accent); background: #ffffff18; }
+
     .subtask-bar { margin-top: 7px; padding-left: 8px; }
     .sb-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .sb-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
@@ -973,10 +982,15 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 // ── FILTERS ───────────────────────────────────────────────────────────────
 
 function filtered(list) {
-  const q  = document.getElementById('qSearch').value.trim().toLowerCase();
-  const fc = document.getElementById('fColor').value;
+  const raw = (document.getElementById('qSearch')?.value || '').trim().toLowerCase();
+  const fc  = document.getElementById('fColor')?.value || '';
+  // Erota #tagit ja vapaa tekstihaku
+  const tags = (raw.match(/#\w+/g) || []);
+  const q    = raw.replace(/#\w+/g, '').trim();
   return list.filter(p => {
-    if (q && !p.title.toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
+    const text = ((p.title||'') + ' ' + (p.desc||'')).toLowerCase();
+    if (q && !text.includes(q)) return false;
+    if (tags.length && !tags.every(t => text.includes(t))) return false;
     if (fc && p.color !== fc) return false;
     if (fCategory && (p.group||'') !== fCategory) return false;
     return true;
@@ -1020,12 +1034,17 @@ function render() {
   // Archive
   if (archived.length > 0) {
     const fa = filtered(archived);
+    const searchActive = hasActiveFilters();
+    const showArch = showArchive || (searchActive && fa.length > 0);
+    const archLabel = searchActive && fa.length > 0 && !showArchive
+      ? `Arkisto · ${fa.length} osumaa`
+      : `Arkisto (${archived.length})`;
     html += `<div class="section-bar">
-      <span class="section-label">Arkisto (${archived.length})</span>
+      <span class="section-label">${archLabel}</span>
       <div class="section-line"></div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleArch()" style="display:inline-flex;align-items:center;padding:4px 8px"><i data-lucide="${showArchive ? 'chevron-up' : 'chevron-down'}"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleArch()" style="display:inline-flex;align-items:center;padding:4px 8px"><i data-lucide="${showArch ? 'chevron-up' : 'chevron-down'}"></i></button>
     </div>`;
-    if (showArchive) {
+    if (showArch) {
       html += '<div class="list-view" style="margin-top:0">';
       if (fa.length === 0) html += '<div class="empty">Ei hakutuloksia arkistossa.</div>';
       else fa.forEach(p => { html += card(p, 'archive'); });
@@ -1049,6 +1068,10 @@ function card(p, mode) {
   let badges = '';
   if (p.group) badges += `<span class="pri-icon" title="${esc(p.group)}"><i data-lucide="${esc(p.group)}"></i></span>`;
   if (dlStr) badges += `<span class="badge ${over ? 'b-overdue' : 'b-dead'}">${over ? '⚠ ' : ''}${dlStr} ${countdown(dl, today)}</span>`;
+  const tags = extractTags((p.title||'') + ' ' + (p.desc||''));
+  tags.forEach(tag => {
+    badges += `<button class="tag-badge" onclick="filterByTag('${esc(tag)}');event.stopPropagation()">${esc(tag)}</button>`;
+  });
 
   const tCls = 'card-title';
   const drag = mode !== 'archive' ? `draggable="true" ondragstart="dStart(event,'${p.id}')" ondragend="dEnd(event)"` : '';
@@ -1849,6 +1872,18 @@ function importJSON(e) {
 }
 
 // ── UTILS ──────────────────────────────────────────────────────────────────
+
+function extractTags(text) {
+  return [...new Set((text || '').match(/#\w+/g) || [])];
+}
+
+function filterByTag(tag) {
+  const panel = document.getElementById('filterPanel');
+  panel.classList.remove('hidden');
+  document.getElementById('filterBtn').classList.add('filter-active');
+  document.getElementById('qSearch').value = tag;
+  render();
+}
 
 function esc(s) {
   return String(s||'')
