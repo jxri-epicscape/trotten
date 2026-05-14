@@ -312,8 +312,9 @@
       background: var(--surface); border: 1px solid var(--warning);
       border-radius: var(--r); overflow: hidden;
       transition: border-color .15s;
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--border);
     }
-    .postit-capture:focus-within { border-color: #ffbe4d; box-shadow: 0 0 0 3px rgba(255,165,2,.13); }
+    .postit-capture:focus-within { border-color: #ffbe4d; box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px #4a4a4a; }
     .postit-capture input {
       flex: 1; padding: 13px 16px; font-size: 15px;
       background: none; border: none; color: var(--text); outline: none;
@@ -512,17 +513,8 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v37</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v38</span>
   </span>
-
-  <div class="dd-wrap" id="gistSwitcherWrap">
-    <button class="gist-switcher-btn" onclick="toggleGistSwitcher()" id="gistSwitcherBtn">
-      <i data-lucide="layers-2"></i>
-      <span class="gist-switcher-name" id="gistSwitcherName">—</span>
-      <i data-lucide="chevron-down" id="gistSwitcherChev" style="width:11px;height:11px;margin-left:1px"></i>
-    </button>
-    <div class="gist-switcher-menu hidden" id="gistSwitcherMenu"></div>
-  </div>
 
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
@@ -530,14 +522,15 @@
   <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="search"></i></button>
 
-  <div class="dd-wrap">
-    <button class="hdr-btn text-btn" onclick="toggleJsonMenu()">JSON</button>
-    <div class="dd-menu hidden" id="jsonMenu">
-      <button onclick="document.getElementById('impFile').click();closeJsonMenu()">Tuo</button>
-      <button onclick="exportJSON();closeJsonMenu()">Vie</button>
-    </div>
+  <div class="dd-wrap" id="gistSwitcherWrap">
+    <button class="hdr-btn" onclick="toggleGistSwitcher()" id="gistSwitcherBtn" title="Vaihda Gist">
+      <i data-lucide="layers-2"></i>
+    </button>
+    <div class="gist-switcher-menu hidden" id="gistSwitcherMenu"></div>
   </div>
+
   <input type="file" id="impFile" accept=".json" class="hidden" onchange="importJSON(event)">
+  <button class="hdr-btn" onclick="openGuide()" title="Opas"><i data-lucide="book-open"></i></button>
   <button class="hdr-btn" onclick="openSettings()" title="Asetukset"><i data-lucide="sliders-horizontal"></i></button>
 
 </header>
@@ -550,7 +543,7 @@
       <span style="font-size:12px;color:var(--muted)">Kirjoita vapaasti — 1. rivi = otsikko</span>
       <button class="postit-close" onclick="closePostit()"><i data-lucide="x"></i></button>
     </div>
-    <textarea class="postit-area" id="postitText" placeholder="Mitä mielessä..."></textarea>
+    <textarea class="postit-area" id="postitText"></textarea>
     <div class="postit-foot">
       <button class="btn btn-ghost btn-sm" onclick="closePostit()">Peruuta</button>
       <button class="btn btn-success" onclick="savePostit()" style="display:inline-flex;align-items:center;gap:6px">
@@ -593,7 +586,7 @@
 </div>
 
 <div class="filter-panel hidden" id="filterPanel">
-  <input class="search" id="qSearch" type="text" placeholder="Hae..." oninput="render()">
+  <input class="search" id="qSearch" type="text" oninput="render()">
   <select class="fsel" id="fColor" onchange="render()">
     <option value="">Kaikki värit</option>
   </select>
@@ -620,12 +613,12 @@
 
     <div class="fg">
       <label class="fl">Otsikko</label>
-      <input class="fi" id="mName" type="text" placeholder="Otsikko...">
+      <input class="fi" id="mName" type="text">
     </div>
 
     <div class="fg">
       <label class="fl">Sisältö</label>
-      <textarea class="fta" id="mDesc" placeholder="Sisältö, muistiinpanot..." style="min-height:100px"></textarea>
+      <textarea class="fta" id="mDesc" style="min-height:100px"></textarea>
     </div>
 
     <div class="fg">
@@ -664,7 +657,7 @@
 
     <div class="fg">
       <label class="fl">GitHub Token</label>
-      <input class="fi" id="setupToken" type="password" placeholder="ghp_..." autocomplete="new-password">
+      <input class="fi" id="setupToken" type="password" autocomplete="new-password">
     </div>
 
     <div class="setup-tabs">
@@ -679,7 +672,7 @@
       <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
         <div class="fg" style="flex:1;margin-bottom:0">
           <label class="fl">Gist ID</label>
-          <input class="fi" id="setupGistId" type="text" placeholder="esim. a1b2c3d4e5f6...">
+          <input class="fi" id="setupGistId" type="text">
         </div>
         <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="fetchGists()">Hae lista</button>
       </div>
@@ -711,6 +704,19 @@
   </div>
 </div>
 
+<!-- ── GUIDE OVERLAY ── -->
+<div class="overlay hidden" id="guideOverlay" onclick="guideOverlayClick(event)">
+  <div class="modal" style="max-width:600px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+      <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px">
+        <i data-lucide="book-open"></i> Opas
+      </div>
+      <button onclick="closeGuide()" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:2px"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <div id="guideContent" style="font-size:13px;line-height:1.7;color:var(--text)"></div>
+  </div>
+</div>
+
 <!-- ── SETTINGS OVERLAY ── -->
 <div class="overlay hidden" id="settingsOverlay" onclick="settingsOverlayClick(event)">
   <div class="modal" style="max-width:520px">
@@ -727,7 +733,7 @@
       <div class="fg">
         <label class="fl">GitHub Token</label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sToken" type="password" placeholder="ghp_..." style="flex:1" autocomplete="new-password">
+          <input class="fi" id="sToken" type="password" style="flex:1" autocomplete="new-password">
           <button class="btn btn-ghost btn-sm" onclick="saveSettingsToken()">Tallenna</button>
         </div>
       </div>
@@ -740,12 +746,25 @@
       </button>
     </div>
 
+    <!-- JSON -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">Data</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px" onclick="document.getElementById('impFile').click();closeSettings()">
+          <i data-lucide="upload"></i> Tuo JSON
+        </button>
+        <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px" onclick="exportJSON();closeSettings()">
+          <i data-lucide="download"></i> Vie JSON
+        </button>
+      </div>
+    </div>
+
     <!-- LABELIT -->
     <div class="settings-section" style="margin-top:20px">
       <div class="settings-section-title">Labelit</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Valitse neljä labelia. Klikkaa slottia, sitten ikonia.</p>
       <div id="labelSlots" style="display:flex;gap:8px;margin-bottom:14px"></div>
-      <input type="text" class="fi" id="labelIconSearch" placeholder="Hae ikonia..." oninput="renderLabelIconGrid()"
+      <input type="text" class="fi" id="labelIconSearch" oninput="renderLabelIconGrid()"
         style="margin-bottom:10px;font-size:13px;padding:6px 10px">
       <div id="labelIconGrid" style="display:flex;flex-wrap:wrap;gap:5px;max-height:200px;overflow-y:auto"></div>
     </div>
@@ -767,7 +786,7 @@
       <div class="fg" style="margin-top:12px">
         <label class="fl" id="imgApiLabel">API-avain</label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." style="flex:1" autocomplete="new-password">
+          <input class="fi" id="sImgApiKey" type="password" style="flex:1" autocomplete="new-password">
           <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()">Tallenna</button>
           <button class="btn btn-ghost btn-sm" onclick="testImgApiKey()">Testaa</button>
         </div>
@@ -775,7 +794,7 @@
       <div class="fg" style="margin-bottom:0">
         <label class="fl">Proxy URL <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">— Cloudflare Worker (proxy-worker.js repossa)</span></label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sImgProxy" type="text" placeholder="https://trotten-proxy.sinunnimi.workers.dev" style="flex:1" autocomplete="off">
+          <input class="fi" id="sImgProxy" type="text" style="flex:1" autocomplete="off">
           <button class="btn btn-ghost btn-sm" onclick="saveImgProxy()">Tallenna</button>
         </div>
       </div>
@@ -2092,6 +2111,73 @@ function importJSON(e) {
 
 // ── UTILS ──────────────────────────────────────────────────────────────────
 
+// ── GUIDE ──────────────────────────────────────────────────────────────────
+
+const GUIDE_HTML = `
+<p style="color:var(--muted);margin-bottom:20px">Trotten on muistiinpano- ja tehtävätyökalu joka elää yhdessä selainvälilehdessä. Ei asennusta. Ei tiliä. Data tallennetaan omaan GitHub Gistiin.</p>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Kaappaus</div>
+  <p><strong>Keltainen baarilyhyt</strong> — kirjoita ja paina Enter. Lappu tallentuu välittömästi. Jos teksti on yli 10 sanaa, neljä ensimmäistä sanaa tulevat otsikoksi ja loput sisällöksi automaattisesti.</p>
+  <p style="margin-top:8px"><strong>Label-pikavalinnat</strong> — neljä ikoni-nappia baarin yläpuolella. Klikkaa yhtä niin uusi lappu avautuu ko. labelilla valittuna.</p>
+  <p style="margin-top:8px"><strong>Kuva → teksti</strong> — kopioi kuva leikepöydälle ja paina ⌘V / Ctrl+V. Trotten lukee kuvan tekstin AI:lla ja tarjoaa sen muokattavaksi ennen tallennusta. Vaatii API-avaimen asetuksista.</p>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Organisointi</div>
+  <p><strong>Labelit</strong> — neljä ikonia joita voit muokata asetuksista. Klikattavia ja suodatettavia.</p>
+  <p style="margin-top:8px"><strong>Värit</strong> — värijuova lapun vasemmalla reunalla. Visuaalinen ryhmittely.</p>
+  <p style="margin-top:8px"><strong>Deadline</strong> — päivämäärä. Näyttää countdownin: tänään, huomenna, 3 pv, 2 vk. Myöhässä olevat saavat varoituksen.</p>
+  <p style="margin-top:8px"><strong>Hashtagit</strong> — kirjoita <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">#idea</code> otsikkoon tai sisältöön. Trotten tunnistaa automaattisesti. Klikkaa tagia kortilla → suodattaa kaikki saman tagin laput. Tuki myös haussa.</p>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Toiminnot kortilla</div>
+  <div style="display:grid;grid-template-columns:24px 1fr;gap:6px 10px;align-items:start">
+    <span style="color:var(--muted);text-align:center">✏️</span><span>Muokkaa</span>
+    <span style="color:var(--muted);text-align:center">🗄</span><span>Arkistoi — siirtää pois päänäkymästä</span>
+    <span style="color:var(--muted);text-align:center">🔗</span><span>Liitä toiseen lappuun — sisältö yhdistyy kohdelappuun</span>
+    <span style="color:var(--muted);text-align:center">📋</span><span>Kopioi sisältö leikepöydälle</span>
+    <span style="color:var(--muted);text-align:center">✨</span><span>Lähetä promptiksi — avaa AI-palvelussa valmiilla promptilla</span>
+  </div>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Haku</div>
+  <p>Haku etsii otsikosta ja sisällöstä. Kirjoita <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">#idea</code> hakuun suodattaaksesi tagilla. Yhdistelmä toimii: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">ruttopuisto #idea</code>. Haku löytää myös arkistosta — arkisto avautuu automaattisesti jos siellä on osumia.</p>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Gistit ja synkronointi</div>
+  <p>Data tallennetaan GitHub Gistiin — tavallinen JSON-tiedosto omassa GitHub-tilissäsi. Jokainen muutos tallentuu automaattisesti 1,5 sekunnin viiveellä.</p>
+  <p style="margin-top:8px">Useita Gistejä: eri työtilat kotiin, töihin tai jaetuille projekteille. Vaihda aktiivinen Gist layers-ikonista headerin oikeassa reunassa.</p>
+  <p style="margin-top:8px"><strong>Mitä Gistiin voi tallentaa:</strong> muistiinpanot, tehtävät, jopa salasanat — ok. <strong>API-avaimia ei kannata kirjoittaa lappuihin.</strong> GitHub skannaa kaikki Gistit automaattisesti tunnettujen API-avainten varalta ja ilmoittaa providerille, joka sulkee avaimen välittömästi. Ei tietoturvariski — avain vain lakkaa toimimasta minuuteissa.</p>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:4px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Näppäinoikotiet</div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 16px">
+    <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:12px">N</code><span>Uusi lappu</span>
+    <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:12px">Enter</code><span>Tallenna (nopeakaappaus)</span>
+    <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:12px">⌘ Enter</code><span>Tallenna modaalista</span>
+    <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:12px">Esc</code><span>Sulje</span>
+    <code style="background:var(--surface2);padding:1px 6px;border-radius:3px;font-size:12px">⌘V</code><span>Liimaa kuva → lue teksti</span>
+  </div>
+</div>
+`;
+
+function openGuide() {
+  document.getElementById('guideContent').innerHTML = GUIDE_HTML;
+  document.getElementById('guideOverlay').classList.remove('hidden');
+  lucide.createIcons();
+}
+function closeGuide() {
+  document.getElementById('guideOverlay').classList.add('hidden');
+}
+function guideOverlayClick(e) {
+  if (e.target === document.getElementById('guideOverlay')) closeGuide();
+}
+
 function extractTags(text) {
   return [...new Set((text || '').match(/#\w+/g) || [])];
 }
@@ -2121,7 +2207,7 @@ function toast(msg) {
 // N = uusi projekti, Esc = sulje modal, Ctrl+Enter = tallenna
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeImgReview(); return; }
+  if (e.key === 'Escape') { closeModal(); closeImgReview(); closeGuide(); return; }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey
       && document.activeElement === document.body) {
     openModal(null); return;
@@ -2152,6 +2238,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v37</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v38</div>
 </body>
 </html>
