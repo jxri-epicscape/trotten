@@ -812,6 +812,13 @@
       <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;line-height:1.5"></p>
     </div>
 
+    <!-- KALENTERI -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">Kalenteri — Lisää deadline kalenteriin</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Kun lapulla on deadline, kortin toiminnoissa näkyy kalenteripainike.</p>
+      <div class="ai-svc-btns" id="calSvcPicker"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1142,12 +1149,14 @@ function card(p, mode) {
       <button class="btn btn-danger btn-sm" onclick="del('${p.id}',event)">Poista</button>
     </div>`;
   } else {
+    const calBtn = dl ? `<button class="btn btn-ghost btn-sm" onclick="addToCalendar('${p.id}',event)" style="display:inline-flex;align-items:center" title="Lisää kalenteriin"><i data-lucide="calendar-plus"></i></button>` : '';
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center" title="Liitä lappuun"><i data-lucide="link"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="openAi('${p.id}',event)" style="display:inline-flex;align-items:center" title="AI-toiminnot"><i data-lucide="sparkles"></i></button>
+      ${calBtn}
     </div>`;
   }
 
@@ -1397,6 +1406,73 @@ async function testImgApiKey() {
   }
 }
 
+// ── KALENTERI ──────────────────────────────────────────────────────────────
+
+const CAL_SERVICES = [
+  { id: 'google', name: 'Google Calendar' },
+  { id: 'ical',   name: 'iCal / Outlook' },
+];
+
+function renderCalSvcPicker() {
+  const el = document.getElementById('calSvcPicker');
+  if (!el) return;
+  const cur = cfg.calService || 'google';
+  el.innerHTML = CAL_SERVICES.map(s =>
+    `<button class="ai-svc-btn${cur === s.id ? ' sel' : ''}" onclick="setCalSvc('${s.id}')">${s.name}</button>`
+  ).join('');
+}
+
+function setCalSvc(id) {
+  cfg.calService = id;
+  saveCfg();
+  renderCalSvcPicker();
+}
+
+function addToCalendar(id, e) {
+  if (e) e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (!p || !p.deadline) return;
+  const title = p.title || 'Trotten-muistio';
+  const svc = cfg.calService || 'google';
+
+  // Muodosta päivämäärä — deadlinen päivä koko päivänä
+  const dl = new Date(p.deadline);
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = `${dl.getFullYear()}${pad(dl.getMonth()+1)}${pad(dl.getDate())}`;
+  // Seuraava päivä loppupäivämääräksi (Google/iCal käyttää eksklusiivista loppua)
+  const next = new Date(dl); next.setDate(next.getDate() + 1);
+  const ymdn = `${next.getFullYear()}${pad(next.getMonth()+1)}${pad(next.getDate())}`;
+
+  if (svc === 'google') {
+    const params = new URLSearchParams({
+      text: title,
+      dates: `${ymd}/${ymdn}`,
+      details: p.desc || '',
+    });
+    window.open(`https://calendar.google.com/calendar/r/eventedit?${params}`, '_blank');
+  } else {
+    // iCal .ics tiedosto
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Trotten//FI',
+      'BEGIN:VEVENT',
+      `DTSTART;VALUE=DATE:${ymd}`,
+      `DTEND;VALUE=DATE:${ymdn}`,
+      `SUMMARY:${title.replace(/,/g, '\\,')}`,
+      p.desc ? `DESCRIPTION:${p.desc.replace(/\n/g, '\\n').replace(/,/g, '\\,')}` : '',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].filter(Boolean).join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title.slice(0,40).replace(/[^a-z0-9]/gi,'_')}.ics`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+
 // ── KUVA → TEKSTI ──────────────────────────────────────────────────────────
 
 document.addEventListener('paste', async function(e) {
@@ -1615,6 +1691,7 @@ function openSettings() {
   renderLabelIconGrid();
   renderAiSvcPicker();
   renderImgSvcPicker();
+  renderCalSvcPicker();
   lucide.createIcons();
 }
 function closeSettings() {
