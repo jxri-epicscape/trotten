@@ -306,15 +306,24 @@
     .label-bar-btn i[data-lucide] svg { width: 18px; height: 18px; }
 
     /* ── POSTIT CAPTURE ── */
+    @keyframes captureGlow {
+      0%, 100% { box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(255,165,2,.18); }
+      50%       { box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px rgba(255,165,2,.38); }
+    }
     .postit-capture {
       max-width: 860px; margin: 0 auto 16px;
       display: flex; align-items: center;
       background: var(--surface); border: 1px solid var(--warning);
       border-radius: var(--r); overflow: hidden;
       transition: border-color .15s;
-      box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--border);
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(255,165,2,.18);
+      animation: captureGlow 3s ease-in-out infinite;
     }
-    .postit-capture:focus-within { border-color: #ffbe4d; box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px #4a4a4a; }
+    .postit-capture:focus-within {
+      border-color: #ffbe4d;
+      box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px rgba(255,165,2,.5);
+      animation: none;
+    }
     .postit-capture input {
       flex: 1; padding: 13px 16px; font-size: 15px;
       background: none; border: none; color: var(--text); outline: none;
@@ -596,7 +605,7 @@
 <div class="main" style="padding-bottom:0;padding-top:16px">
   <div class="label-bar" id="labelBar"></div>
   <div class="postit-capture">
-    <input type="text" id="postitInput" placeholder="Lisää sisältö"
+    <input type="text" id="postitInput"
       onkeydown="if(event.key==='Enter')quickPostit(this)">
     <span class="postit-capture-hint">Enter ↵</span>
   </div>
