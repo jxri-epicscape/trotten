@@ -798,6 +798,14 @@
           <button class="btn btn-ghost btn-sm" onclick="saveImgProxy()">Tallenna</button>
         </div>
       </div>
+      <div class="fg" style="margin-bottom:0;margin-top:12px">
+        <label class="fl">Malli</label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="sImgModel" type="text" style="flex:1" autocomplete="off">
+          <button class="btn btn-ghost btn-sm" onclick="saveImgModel()">Tallenna</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">Katso saatavilla olevat mallit: <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--muted)">docs.anthropic.com/models</a></p>
+      </div>
       <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;line-height:1.5"></p>
     </div>
 
@@ -1305,6 +1313,8 @@ function updateImgApiField() {
   inp.placeholder = svc?.placeholder || 'avain...';
   inp.value = cfg.imgApiKey || '';
   if (proxy) proxy.value = cfg.imgProxyUrl || '';
+  const modelEl = document.getElementById('sImgModel');
+  if (modelEl) modelEl.value = cfg.imgModel || 'claude-haiku-4-5';
   if (status) { status.style.color = 'var(--muted)'; status.textContent = ''; }
 }
 
@@ -1312,6 +1322,12 @@ function saveImgApiKey() {
   cfg.imgApiKey = document.getElementById('sImgApiKey').value.trim();
   saveCfg();
   toast('API-avain tallennettu!');
+}
+
+function saveImgModel() {
+  cfg.imgModel = document.getElementById('sImgModel').value.trim();
+  saveCfg();
+  toast('Malli tallennettu!');
 }
 
 function saveImgProxy() {
@@ -1350,7 +1366,7 @@ async function testImgApiKey() {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
+          model: cfg.imgModel || 'claude-haiku-4-5',
           max_tokens: 5,
           messages: [{ role: 'user', content: 'Hi' }],
         }),
@@ -1437,7 +1453,7 @@ async function extractTextAnthropic(base64, mimeType, apiKey) {
       'anthropic-dangerous-allow-browser': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-3-haiku-20240307',
+      model: cfg.imgModel || 'claude-haiku-4-5',
       max_tokens: 1024,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
