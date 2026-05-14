@@ -1287,7 +1287,15 @@ function saveImgApiKey() {
 async function testImgApiKey() {
   const apiKey = document.getElementById('sImgApiKey').value.trim() || cfg.imgApiKey;
   const statusEl = document.getElementById('imgApiStatus');
+  if (statusEl) { statusEl.style.color = 'var(--muted)'; }
   if (!apiKey) { if (statusEl) statusEl.textContent = 'Syötä avain ensin.'; return; }
+
+  // Paikallinen tiedosto ei tue fetch-kutsuja ulospäin
+  if (window.location.protocol === 'file:') {
+    if (statusEl) { statusEl.style.color = 'var(--warning)'; statusEl.textContent = '⚠ Trotten on auki paikallisena tiedostona. Avaa se GitHub Pages -osoitteesta — selain ei salli API-kutsuja file://-protokollasta.'; }
+    return;
+  }
+
   if (statusEl) statusEl.textContent = 'Testataan...';
   const service = cfg.imgService || 'anthropic';
   try {
@@ -1339,6 +1347,10 @@ document.addEventListener('paste', async function(e) {
 
   e.preventDefault();
 
+  if (window.location.protocol === 'file:') {
+    toast('⚠ Avaa Trotten GitHub Pages -osoitteesta — file:// ei salli API-kutsuja.');
+    return;
+  }
   const apiKey = cfg.imgApiKey;
   if (!apiKey) {
     toast('Lisää kuva→teksti API-avain ensin asetuksista.');
