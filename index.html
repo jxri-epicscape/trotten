@@ -768,8 +768,10 @@
         <label class="fl" id="imgApiLabel">API-avain</label>
         <div style="display:flex;gap:8px">
           <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." style="flex:1" autocomplete="new-password">
-          <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()" id="saveImgKeyBtn">Tallenna</button>
+          <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()">Tallenna</button>
+          <button class="btn btn-ghost btn-sm" onclick="testImgApiKey()" id="testImgKeyBtn">Testaa</button>
         </div>
+        <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:6px;min-height:16px"></p>
       </div>
     </div>
 
@@ -1282,6 +1284,52 @@ function saveImgApiKey() {
   toast('API-avain tallennettu!');
 }
 
+async function testImgApiKey() {
+  const apiKey = document.getElementById('sImgApiKey').value.trim() || cfg.imgApiKey;
+  const statusEl = document.getElementById('imgApiStatus');
+  if (!apiKey) { if (statusEl) statusEl.textContent = 'Syötä avain ensin.'; return; }
+  if (statusEl) statusEl.textContent = 'Testataan...';
+  const service = cfg.imgService || 'anthropic';
+  try {
+    let res;
+    if (service === 'anthropic') {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-allow-browser': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 5,
+          messages: [{ role: 'user', content: 'Hi' }],
+        }),
+      });
+    } else {
+      res = await fetch('https://api.openai.com/v1/models', {
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+      });
+    }
+    if (res.ok) {
+      if (statusEl) statusEl.style.color = 'var(--success)';
+      if (statusEl) statusEl.textContent = '✓ Yhteys toimii!';
+    } else {
+      const e = await res.json().catch(() => ({}));
+      if (statusEl) statusEl.style.color = 'var(--danger)';
+      if (statusEl) statusEl.textContent = '⚠ ' + (e.error?.message || `HTTP ${res.status}`);
+    }
+  } catch (err) {
+    if (statusEl) statusEl.style.color = 'var(--danger)';
+    if (err.message === 'Failed to fetch') {
+      if (statusEl) statusEl.textContent = '⚠ Verkkovirhe — selaimen laajennus tai CORS blokkaa pyynnön. Kokeile incognito-ikkunassa.';
+    } else {
+      if (statusEl) statusEl.textContent = '⚠ ' + err.message;
+    }
+  }
+}
+
 // ── KUVA → TEKSTI ──────────────────────────────────────────────────────────
 
 document.addEventListener('paste', async function(e) {
@@ -1309,7 +1357,11 @@ document.addEventListener('paste', async function(e) {
     showImgReview(text);
   } catch (err) {
     toastEl.remove();
-    toast('⚠ ' + err.message);
+    if (err.message === 'Failed to fetch') {
+      toast('⚠ Verkkovirhe — tarkista API-avain asetuksista (Testaa-nappi).');
+    } else {
+      toast('⚠ ' + err.message);
+    }
   }
 });
 
