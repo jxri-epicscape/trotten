@@ -764,15 +764,22 @@
       <div class="settings-section-title">AI-palvelu — Kuva → teksti</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Kopioi kuva leikepöydälle ja paina <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:11px">⌘V</kbd> / <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:11px">Ctrl+V</kbd> missä tahansa Trottenissa.</p>
       <div class="ai-svc-btns" id="imgSvcPicker"></div>
-      <div class="fg" style="margin-bottom:0;margin-top:12px">
+      <div class="fg" style="margin-top:12px">
         <label class="fl" id="imgApiLabel">API-avain</label>
         <div style="display:flex;gap:8px">
           <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." style="flex:1" autocomplete="new-password">
           <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()">Tallenna</button>
-          <button class="btn btn-ghost btn-sm" onclick="testImgApiKey()" id="testImgKeyBtn">Testaa</button>
+          <button class="btn btn-ghost btn-sm" onclick="testImgApiKey()">Testaa</button>
         </div>
-        <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:6px;min-height:16px"></p>
       </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Proxy URL <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)">— Cloudflare Worker (proxy-worker.js repossa)</span></label>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="sImgProxy" type="text" placeholder="https://trotten-proxy.sinunnimi.workers.dev" style="flex:1" autocomplete="off">
+          <button class="btn btn-ghost btn-sm" onclick="saveImgProxy()">Tallenna</button>
+        </div>
+      </div>
+      <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;line-height:1.5"></p>
     </div>
 
   </div>
@@ -1272,16 +1279,26 @@ function updateImgApiField() {
   const svc = IMG_SERVICES.find(s => s.id === cur);
   const inp = document.getElementById('sImgApiKey');
   const lbl = document.getElementById('imgApiLabel');
+  const proxy = document.getElementById('sImgProxy');
+  const status = document.getElementById('imgApiStatus');
   if (!inp) return;
   if (lbl) lbl.textContent = `${svc?.name || ''} API-avain`;
   inp.placeholder = svc?.placeholder || 'avain...';
   inp.value = cfg.imgApiKey || '';
+  if (proxy) proxy.value = cfg.imgProxyUrl || '';
+  if (status) { status.style.color = 'var(--muted)'; status.textContent = ''; }
 }
 
 function saveImgApiKey() {
   cfg.imgApiKey = document.getElementById('sImgApiKey').value.trim();
   saveCfg();
   toast('API-avain tallennettu!');
+}
+
+function saveImgProxy() {
+  cfg.imgProxyUrl = document.getElementById('sImgProxy').value.trim().replace(/\/$/, '');
+  saveCfg();
+  toast('Proxy tallennettu!');
 }
 
 async function testImgApiKey() {
@@ -1387,7 +1404,8 @@ function blobToBase64(blob) {
 }
 
 async function extractTextAnthropic(base64, mimeType, apiKey) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const base = (cfg.imgProxyUrl || 'https://api.anthropic.com').replace(/\/$/, '');
+  const res = await fetch(`${base}/v1/messages`, {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
