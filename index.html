@@ -512,7 +512,7 @@
 <header class="header">
   <span class="header-title" style="display:flex;align-items:center;gap:7px">
     <i data-lucide="shield-cog" style="width:20px;height:20px;color:var(--accent)"></i>
-    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v36</span>
+    Trotten <span style="font-size:11px;font-weight:400;color:var(--muted)">v37</span>
   </span>
 
   <div class="dd-wrap" id="gistSwitcherWrap">
@@ -693,6 +693,24 @@
   </div>
 </div>
 
+<!-- ── IMAGE REVIEW OVERLAY ── -->
+<div class="overlay hidden" id="imgReviewOverlay" onclick="imgReviewOverlayClick(event)">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="modal-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px">
+        <i data-lucide="file-text"></i> Kuvan teksti
+      </div>
+      <button onclick="closeImgReview()" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:2px"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Tarkista ja muokkaa — tallennetaan uutena lappuna.</p>
+    <textarea class="fta" id="imgReviewText" style="min-height:180px;font-size:14px;line-height:1.6"></textarea>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeImgReview()">Peruuta</button>
+      <button class="btn btn-ghost btn-sm" onclick="saveImgAsNote()" style="display:inline-flex;align-items:center" title="Tallenna lappuna"><i data-lucide="save"></i></button>
+    </div>
+  </div>
+</div>
+
 <!-- ── SETTINGS OVERLAY ── -->
 <div class="overlay hidden" id="settingsOverlay" onclick="settingsOverlayClick(event)">
   <div class="modal" style="max-width:520px">
@@ -743,13 +761,14 @@
 
     <!-- KUVA API -->
     <div class="settings-section" style="margin-top:20px">
-      <div class="settings-section-title">AI-palvelu — Kuva → teksti <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:6px">tulossa</span></div>
+      <div class="settings-section-title">AI-palvelu — Kuva → teksti</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Kopioi kuva leikepöydälle ja paina <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:11px">⌘V</kbd> / <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:11px">Ctrl+V</kbd> missä tahansa Trottenissa.</p>
       <div class="ai-svc-btns" id="imgSvcPicker"></div>
       <div class="fg" style="margin-bottom:0;margin-top:12px">
         <label class="fl" id="imgApiLabel">API-avain</label>
         <div style="display:flex;gap:8px">
-          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." disabled style="opacity:.4;cursor:not-allowed;flex:1" autocomplete="new-password">
-          <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()" disabled id="saveImgKeyBtn" style="opacity:.4;cursor:not-allowed">Tallenna</button>
+          <input class="fi" id="sImgApiKey" type="password" placeholder="sk-ant-..." style="flex:1" autocomplete="new-password">
+          <button class="btn btn-ghost btn-sm" onclick="saveImgApiKey()" id="saveImgKeyBtn">Tallenna</button>
         </div>
       </div>
     </div>
@@ -1250,21 +1269,135 @@ function updateImgApiField() {
   const cur = cfg.imgService || 'anthropic';
   const svc = IMG_SERVICES.find(s => s.id === cur);
   const inp = document.getElementById('sImgApiKey');
-  const btn = document.getElementById('saveImgKeyBtn');
   const lbl = document.getElementById('imgApiLabel');
   if (!inp) return;
   if (lbl) lbl.textContent = `${svc?.name || ''} API-avain`;
   inp.placeholder = svc?.placeholder || 'avain...';
   inp.value = cfg.imgApiKey || '';
-  // disabled until feature ships
-  // inp.disabled = false; inp.style.opacity = '1'; inp.style.cursor = '';
-  // btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = '';
 }
 
 function saveImgApiKey() {
   cfg.imgApiKey = document.getElementById('sImgApiKey').value.trim();
   saveCfg();
   toast('API-avain tallennettu!');
+}
+
+// ── KUVA → TEKSTI ──────────────────────────────────────────────────────────
+
+document.addEventListener('paste', async function(e) {
+  const items = [...(e.clipboardData?.items || [])];
+  const imgItem = items.find(i => i.type.startsWith('image/'));
+  if (!imgItem) return; // normaali tekstiliimaus, ei puututa
+
+  e.preventDefault();
+
+  const apiKey = cfg.imgApiKey;
+  if (!apiKey) {
+    toast('Lisää kuva→teksti API-avain ensin asetuksista.');
+    return;
+  }
+
+  const toastEl = showPersistentToast('Luetaan kuvaa...');
+  try {
+    const blob    = imgItem.getAsFile();
+    const base64  = await blobToBase64(blob);
+    const service = cfg.imgService || 'anthropic';
+    const text    = service === 'openai'
+      ? await extractTextOpenAI(base64, blob.type, apiKey)
+      : await extractTextAnthropic(base64, blob.type, apiKey);
+    toastEl.remove();
+    showImgReview(text);
+  } catch (err) {
+    toastEl.remove();
+    toast('⚠ ' + err.message);
+  }
+});
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function extractTextAnthropic(base64, mimeType, apiKey) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-allow-browser': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+        { type: 'text',  text: 'Extract all text from this image. Return only the raw extracted text — no commentary, no markdown, no formatting. Plain text only.' },
+      ]}],
+    }),
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+  const data = await res.json();
+  return data.content[0]?.text?.trim() || '';
+}
+
+async function extractTextOpenAI(base64, mimeType, apiKey) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: [
+        { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+        { type: 'text',      text: 'Extract all text from this image. Return only the raw extracted text — no commentary, no markdown, no formatting. Plain text only.' },
+      ]}],
+    }),
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+  const data = await res.json();
+  return data.choices[0]?.message?.content?.trim() || '';
+}
+
+function showImgReview(text) {
+  document.getElementById('imgReviewText').value = text;
+  document.getElementById('imgReviewOverlay').classList.remove('hidden');
+  lucide.createIcons();
+  setTimeout(() => document.getElementById('imgReviewText').focus(), 30);
+}
+
+function closeImgReview() {
+  document.getElementById('imgReviewOverlay').classList.add('hidden');
+}
+
+function imgReviewOverlayClick(e) {
+  if (e.target === document.getElementById('imgReviewOverlay')) closeImgReview();
+}
+
+function saveImgAsNote() {
+  const raw = document.getElementById('imgReviewText').value.trim();
+  if (!raw) return;
+  const { title, desc } = smartSplit(raw);
+  const now = new Date().toISOString();
+  projects.unshift({
+    id: uid(), title, desc, priority: '', status: 'todo',
+    deadline: '', est: 0, logged: 0, color: '', group: '',
+    subs: [], archived: false, draft: true, createdAt: now, updatedAt: now,
+  });
+  closeImgReview();
+  render(); triggerSave();
+  toast('Lappu lisätty!');
+}
+
+function showPersistentToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  return el;
 }
 
 function copyCard(id, e) {
@@ -1902,7 +2035,7 @@ function toast(msg) {
 // N = uusi projekti, Esc = sulje modal, Ctrl+Enter = tallenna
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key === 'Escape') { closeModal(); closeImgReview(); return; }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey
       && document.activeElement === document.body) {
     openModal(null); return;
@@ -1933,6 +2066,6 @@ if (!cfg.token || !cfg.gistId) {
   });
 }
 </script>
-<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v36</div>
+<div style="position:fixed;bottom:6px;right:10px;font-size:11px;color:#3a3a3a;user-select:none">v37</div>
 </body>
 </html>
