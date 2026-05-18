@@ -2006,6 +2006,10 @@ function renderGistSlots() {
       <input class="fi" type="text"
         value="${esc(g.id)}" placeholder="Gist ID" autocomplete="off"
         onchange="updateGistId(${i}, this.value)">
+      <button class="btn btn-ghost btn-sm" onclick="copyGistId(${i})" title="Kopioi Gist ID"
+        style="display:inline-flex;align-items:center;color:var(--muted)">
+        <i data-lucide="copy"></i>
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="removeGistSlot(${i})" title="Poista"
         style="display:inline-flex;align-items:center;color:var(--muted)">
         <i data-lucide="trash-2"></i>
@@ -2043,6 +2047,12 @@ async function createAndAddGist() {
     renderGistSlots();
     toast(`✓ Gist "${name}" luotu! ID: ${data.id}`);
   } catch (e) { toast('⚠ ' + e.message); }
+}
+
+function copyGistId(i) {
+  const id = cfg.gists[i]?.id;
+  if (!id) { toast('Ei ID:tä kopioitavaksi.'); return; }
+  navigator.clipboard.writeText(id).then(() => toast('Gist ID kopioitu!')).catch(() => toast('⚠ Kopiointi epäonnistui'));
 }
 
 function updateGistName(i, v) {
