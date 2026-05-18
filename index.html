@@ -629,7 +629,12 @@
     </div>
 
     <div class="fg">
-      <label class="fl">Sisältö</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label class="fl" style="margin-bottom:0">Sisältö</label>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="wrapCheckbox()" title="Muuta valinta checkboxiksi" style="display:inline-flex;align-items:center;gap:4px;font-size:11px">
+          <i data-lucide="square-check-big" style="width:13px;height:13px"></i> Checkbox
+        </button>
+      </div>
       <textarea class="fta" id="mDesc" style="min-height:100px"></textarea>
     </div>
 
@@ -1136,16 +1141,44 @@ function render() {
 function renderDesc(p) {
   if (!p.desc) return '';
   return p.desc.split('\n').map((line, i) => {
-    if (/^- \[ \]/.test(line)) {
-      const txt = esc(line.replace(/^- \[ \]\s*/, ''));
+    if (/^-? ?\[ \]/.test(line)) {
+      const txt = esc(line.replace(/^-? ?\[ \]\s*/, ''));
       return `<label class="chk-line"><input type="checkbox" onclick="toggleCheck('${esc(p.id)}',${i},event)"><span>${txt}</span></label>`;
     }
-    if (/^- \[x\]/i.test(line)) {
-      const txt = esc(line.replace(/^- \[x\]\s*/i, ''));
+    if (/^-? ?\[x\]/i.test(line)) {
+      const txt = esc(line.replace(/^-? ?\[x\]\s*/i, ''));
       return `<label class="chk-line"><input type="checkbox" checked onclick="toggleCheck('${esc(p.id)}',${i},event)"><span class="chk-done">${txt}</span></label>`;
     }
     return `<span class="desc-plain">${esc(line)}</span>`;
   }).join('\n');
+}
+
+function wrapCheckbox() {
+  const ta = document.getElementById('mDesc');
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end   = ta.selectionEnd;
+  const val   = ta.value;
+  const sel   = val.slice(start, end);
+
+  if (!sel) {
+    // Ei valintaa — lisää uusi checkbox-rivi kursorin kohtaan
+    const prefix = start > 0 && val[start-1] !== '\n' ? '\n' : '';
+    const insert = prefix + '- [ ] ';
+    ta.value = val.slice(0, start) + insert + val.slice(end);
+    const pos = start + insert.length;
+    ta.setSelectionRange(pos, pos);
+  } else {
+    // Muunna jokainen valittu rivi checkboxiksi
+    const lines = sel.split('\n').map(l => {
+      const clean = l.replace(/^- \[[ x]\] /i, '').replace(/^- /, '');
+      return clean ? '- [ ] ' + clean : l;
+    });
+    const replacement = lines.join('\n');
+    ta.value = val.slice(0, start) + replacement + val.slice(end);
+    ta.setSelectionRange(start, start + replacement.length);
+  }
+  ta.focus();
 }
 
 function toggleCheck(id, lineIdx, e) {
