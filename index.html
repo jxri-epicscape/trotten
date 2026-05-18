@@ -309,14 +309,14 @@
     .postit-capture {
       max-width: 860px; margin: 0 auto 16px;
       display: flex; align-items: center;
-      background: var(--surface); border: 1px solid var(--warning);
-      border-radius: var(--r); overflow: hidden;
-      transition: border-color .15s, box-shadow .15s;
-      box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(255,165,2,.32);
+      background: var(--surface);
+      border: 1.5px solid transparent;
+      border-image: linear-gradient(90deg, rgba(255,100,0,.45), rgba(255,200,0,.75), rgba(255,100,0,.45)) 1;
+      border-radius: 0;
+      overflow: hidden;
     }
     .postit-capture:focus-within {
-      border-color: #ffbe4d;
-      box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px rgba(255,165,2,.55);
+      border-image: linear-gradient(90deg, rgba(255,120,0,.75), rgba(255,215,0,1), rgba(255,120,0,.75)) 1;
     }
     .postit-capture input {
       flex: 1; padding: 13px 16px; font-size: 15px;
