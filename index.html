@@ -999,11 +999,9 @@ async function loadFromGist() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     const content = data.files[FILENAME]?.content;
-    if (content) {
-      const parsed = JSON.parse(content);
-      projects = parsed.projects || [];
-      view     = 'list';
-    }
+    const parsed = content ? JSON.parse(content) : {};
+    projects = parsed.projects || [];
+    view     = 'list';
     setStatus('');
   } catch(e) {
     setStatus('⚠ Latausvirhe', true);
@@ -2038,7 +2036,7 @@ async function createAndAddGist() {
       body: JSON.stringify({
         description: `Trotten — ${name}`,
         public: false,
-        files: { 'trotten.json': { content: JSON.stringify({ projects: [] }) } },
+        files: { [FILENAME]: { content: JSON.stringify({ projects: [] }) } },
       }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
