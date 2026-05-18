@@ -213,9 +213,10 @@
     .cswatch {
       width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
       border: 2px solid transparent; transition: transform .12s;
+      box-shadow: 0 0 0 0px transparent; transition: transform .12s, box-shadow .12s;
     }
-    .cswatch:hover { transform: scale(1.15); }
-    .cswatch.sel { border-color: #fff; }
+    .cswatch:hover { transform: scale(1.12); }
+    .cswatch.sel { border-color: #fff; box-shadow: 0 0 0 2px #fff; }
 
     /* Subtasks in modal */
     .st-list { display: flex; flex-direction: column; gap: 5px; }
@@ -558,11 +559,9 @@
     .cal-selected .cal-day-num { color: #000 !important; font-weight: 700; }
     .cal-dot {
       width: 18px; height: 6px; border-radius: 3px;
-      background: var(--accent); font-size: 9px; font-weight: 700;
+      font-size: 9px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; color: #000;
     }
-    .cal-dot-over { background: var(--danger); color: #fff; }
-    .cal-selected .cal-dot { background: rgba(0,0,0,.35); color: #000; }
     .cal-day-panel {
       border-top: 1px solid var(--border); margin-top: 14px; padding-top: 14px;
     }
@@ -1664,6 +1663,13 @@ function renderCalGrid() {
     dlMap[p.deadline].push(p);
   });
 
+  // Värikartta päivälle: käytä lapun väriä jos yksi lappu, muuten useamman väri
+  function dayDotStyle(notes, over) {
+    if (over) return 'background:var(--danger)';
+    if (notes.length === 1 && notes[0].color) return `background:${notes[0].color}`;
+    return 'background:var(--accent)';
+  }
+
   // Aloita edellisestä maanantaista
   const first = new Date(calYear, calMonth, 1);
   let dow = first.getDay(); dow = dow === 0 ? 6 : dow - 1; // ma=0, su=6
@@ -1685,7 +1691,7 @@ function renderCalGrid() {
     if (isSel)      cls += ' cal-selected';
 
     const dot = notes.length
-      ? `<span class="cal-dot${hasOver ? ' cal-dot-over' : ''}">${notes.length > 1 ? notes.length : ''}</span>`
+      ? `<span class="cal-dot" style="${isSel ? 'background:rgba(0,0,0,.35);color:#000' : dayDotStyle(notes, hasOver)}">${notes.length > 1 ? notes.length : ''}</span>`
       : '';
 
     html += `<button class="${cls}" onclick="calSelectDay('${ds}')">
