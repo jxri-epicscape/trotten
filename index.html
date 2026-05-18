@@ -39,6 +39,11 @@
     }
     .header-title { font-size: 17px; font-weight: 700; margin-right: 4px; }
     .spacer { flex: 1; }
+    @media (max-width: 600px) {
+      .header { padding: 8px 14px; row-gap: 6px; }
+      .header-title { width: 100%; }
+      .spacer { display: none; }
+    }
 
     input[type="text"], input[type="number"], input[type="date"],
     textarea, select {
@@ -133,6 +138,10 @@
       padding-left: 8px; line-height: 1.55;
       white-space: pre-wrap; word-break: break-word;
     }
+    .chk-line { display: flex; align-items: baseline; gap: 6px; white-space: normal; cursor: pointer; user-select: none; }
+    .chk-line input[type="checkbox"] { margin: 0; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+    .chk-done { text-decoration: line-through; color: var(--muted); }
+    .desc-plain { display: block; }
 
     .card-badges {
       display: flex; gap: 5px; flex-wrap: wrap;
@@ -346,7 +355,7 @@
     .expand-toggle.open  { border-color: var(--accent); color: var(--text); }
 
     /* ── LUCIDE ICONS ── */
-    i[data-lucide], i[data-lucide] svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; stroke-width: 1.5; }
+    i[data-lucide], i[data-lucide] svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; stroke-width: 1.25; }
 
     /* ── PRIORITY TOGGLE ── */
     .pri-toggle { display: flex; gap: 8px; }
@@ -1124,6 +1133,36 @@ function render() {
   lucide.createIcons();
 }
 
+function renderDesc(p) {
+  if (!p.desc) return '';
+  return p.desc.split('\n').map((line, i) => {
+    if (/^- \[ \]/.test(line)) {
+      const txt = esc(line.replace(/^- \[ \]\s*/, ''));
+      return `<label class="chk-line"><input type="checkbox" onclick="toggleCheck('${esc(p.id)}',${i},event)"><span>${txt}</span></label>`;
+    }
+    if (/^- \[x\]/i.test(line)) {
+      const txt = esc(line.replace(/^- \[x\]\s*/i, ''));
+      return `<label class="chk-line"><input type="checkbox" checked onclick="toggleCheck('${esc(p.id)}',${i},event)"><span class="chk-done">${txt}</span></label>`;
+    }
+    return `<span class="desc-plain">${esc(line)}</span>`;
+  }).join('\n');
+}
+
+function toggleCheck(id, lineIdx, e) {
+  e.stopPropagation();
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  const lines = (p.desc || '').split('\n');
+  if (/^- \[x\]/i.test(lines[lineIdx])) {
+    lines[lineIdx] = lines[lineIdx].replace(/^- \[x\]/i, '- [ ]');
+  } else if (/^- \[ \]/.test(lines[lineIdx])) {
+    lines[lineIdx] = lines[lineIdx].replace(/^- \[ \]/, '- [x]');
+  }
+  p.desc = lines.join('\n');
+  triggerSave();
+  render();
+}
+
 function card(p, mode) {
   const today = dayStart(new Date());
   const dl    = p.deadline ? dayStart(new Date(p.deadline)) : null;
@@ -1165,7 +1204,7 @@ function card(p, mode) {
     <div class="card-top">
       <div class="${tCls}">${esc(p.title)}</div>
     </div>
-    ${p.desc ? `<div class="card-desc">${esc(p.desc)}</div>` : ''}
+    ${p.desc ? `<div class="card-desc">${renderDesc(p)}</div>` : ''}
     ${badges ? `<div class="card-badges">${badges}</div>` : ''}
     ${actions}
   </div>`;
@@ -1988,8 +2027,7 @@ function renderLabelBar() {
     `<button class="label-bar-btn" onclick="quickLabel('${c}')" title="${c}">
       <i data-lucide="${c}"></i>
     </button>`
-  ).join('') +
-  `<button class="label-bar-btn label-none" onclick="quickLabel('')">+ Lisää</button>`;
+  ).join('');
   lucide.createIcons();
 }
 
