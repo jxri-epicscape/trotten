@@ -831,9 +831,14 @@
         <label class="fl">Gistit</label>
         <div id="gistSlots" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
-      <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;margin-top:4px" onclick="addGistSlot()">
-        <i data-lucide="plus"></i> Lisää Gist
-      </button>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px" onclick="createAndAddGist()">
+          <i data-lucide="plus"></i> Luo uusi Gist
+        </button>
+        <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted)" onclick="addGistSlot()">
+          <i data-lucide="link"></i> Liitä olemassa oleva ID
+        </button>
+      </div>
     </div>
 
     <!-- JSON -->
@@ -2020,6 +2025,30 @@ function addGistSlot() {
   cfg.gists.push({ name: 'Uusi', id: '', active: false });
   saveCfg();
   renderGistSlots();
+}
+
+async function createAndAddGist() {
+  if (!cfg.token) { toast('Tallenna GitHub-token ensin.'); return; }
+  const name = prompt('Uuden Gistin nimi?', 'Tiimi') || 'Uusi';
+  toast('Luodaan Gist...');
+  try {
+    const res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: `Trotten — ${name}`,
+        public: false,
+        files: { 'trotten.json': { content: JSON.stringify({ projects: [] }) } },
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    cfg.gists = cfg.gists || [];
+    cfg.gists.push({ name, id: data.id, active: false });
+    saveCfg();
+    renderGistSlots();
+    toast(`✓ Gist "${name}" luotu! ID: ${data.id}`);
+  } catch (e) { toast('⚠ ' + e.message); }
 }
 
 function updateGistName(i, v) {
