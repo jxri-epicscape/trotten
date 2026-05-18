@@ -34,13 +34,20 @@ Trotten is one HTML file. Open the URL. Start typing. Everything syncs to your o
 - Color stripes for visual grouping
 - Deadlines with countdown (today, tomorrow, X days, overdue warning)
 - Hashtags — write `#tag` anywhere, click to filter
+- Checklists — select text and click Checkbox, or write `- [ ] item` directly
 - Archive — done notes out of sight, searchable anytime
 
 **Act**
 - AI prompts with six presets: Summarize, Next steps, Code, Rewrite, Write email, Ask more
-- Add to calendar — Google Calendar or iCal/Outlook, one click
+- Calendar view — monthly overview of all deadlines, click any day to see or add notes
+- Add to calendar — Google Calendar or iCal/Outlook, one click from the note
 - Copy note to clipboard
 - Attach one note to another (content appended, source archived)
+
+**Gists**
+- Create a new Gist directly from Settings — no need to go to GitHub first
+- Copy a Gist ID with one click to share with teammates
+- Switch active Gist from the header (layers icon)
 
 **Search**
 - Filter by text, `#hashtag`, color, or label — mix freely
@@ -96,7 +103,9 @@ Open **Settings** (sliders icon, top right):
 
 - Add Gists and name them
 - Switch between them instantly from the header (layers icon)
-- Share a Gist: give someone your Gist ID — they add it in their own Settings with their own token
+- Create a new Gist directly from Settings — no GitHub visit needed
+- Copy a Gist ID with one click to share with teammates
+- They add the ID in their own Settings with their own token — done
 
 ### Step 5 — Enable image-to-text (optional)
 
