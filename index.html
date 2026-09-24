@@ -318,7 +318,7 @@
     /* ── POSTIT CAPTURE ── */
     .postit-capture {
       max-width: 860px; margin: 0 auto 16px;
-      display: flex; align-items: center;
+      display: flex; flex-direction: column;
       background: var(--surface);
       border: 1.5px solid transparent;
       border-image: linear-gradient(90deg, rgba(255,100,0,.45), rgba(255,200,0,.75), rgba(255,100,0,.45)) 1;
@@ -328,13 +328,21 @@
     .postit-capture:focus-within {
       border-image: linear-gradient(90deg, rgba(255,120,0,.75), rgba(255,215,0,1), rgba(255,120,0,.75)) 1;
     }
-    .postit-capture input {
-      flex: 1; padding: 13px 16px; font-size: 15px;
-      background: none; border: none; color: var(--text); outline: none;
+    .postit-title-input {
+      width: 100%; padding: 13px 16px 6px; font-size: 15px; font-weight: 600;
+      background: none; border: none; color: var(--text); outline: none; box-sizing: border-box;
     }
-    .postit-capture input::placeholder { color: var(--muted); }
+    .postit-desc-input {
+      width: 100%; padding: 4px 16px 10px; font-size: 14px; line-height: 1.55;
+      background: none; border: none; color: var(--text); outline: none;
+      resize: none; font-family: inherit; box-sizing: border-box; min-height: 72px;
+    }
+    .postit-capture-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 10px 8px 16px;
+    }
     .postit-capture-hint {
-      font-size: 12px; color: #3a3a3a; padding-right: 14px; white-space: nowrap;
+      font-size: 12px; color: #3a3a3a; white-space: nowrap;
     }
 
     /* ── SETTINGS ── */
@@ -588,7 +596,7 @@
   <span class="save-status" id="saveStatus"></span>
   <div class="spacer"></div>
 
-  <button class="hdr-btn" onclick="openCalendar()" title="Kalenteri"><i data-lucide="calendar-days"></i></button>
+  <button class="hdr-btn" id="calHeaderBtn" onclick="openCalendar()" title="Kalenteri"><i data-lucide="calendar-days"></i></button>
   <button class="hdr-btn" id="archBtn" onclick="toggleArchView()" title="Arkisto"><i data-lucide="archive"></i></button>
   <button class="hdr-btn" id="filterBtn" onclick="toggleFilterPanel()" title="Hae / Suodata"><i data-lucide="search"></i></button>
 
@@ -666,9 +674,14 @@
 <div class="main" style="padding-bottom:0;padding-top:16px">
   <div class="label-bar" id="labelBar"></div>
   <div class="postit-capture">
-    <input type="text" id="postitInput"
-      onkeydown="if(event.key==='Enter')quickPostit(this)">
-    <span class="postit-capture-hint">Enter ↵</span>
+    <input type="text" id="postitTitle" class="postit-title-input"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('postitDesc').focus()}">
+    <textarea id="postitDesc" class="postit-desc-input" rows="3"
+      onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter')quickPostit()"></textarea>
+    <div class="postit-capture-foot">
+      <span class="postit-capture-hint">⌘ Enter ↵</span>
+      <button class="btn btn-ghost btn-sm" onclick="quickPostit()" style="font-size:12px">Tallenna</button>
+    </div>
   </div>
 </div>
 <main class="main" style="padding-top:8px" id="main"></main>
@@ -696,7 +709,7 @@
       <textarea class="fta" id="mDesc" style="min-height:100px"></textarea>
     </div>
 
-    <div class="fg">
+    <div class="fg" id="deadlineField">
       <label class="fl">Deadline</label>
       <input class="fi" id="mDeadline" type="date">
     </div>
@@ -902,6 +915,21 @@
         <p style="font-size:11px;color:var(--muted);margin-top:4px">Katso saatavilla olevat mallit: <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" style="color:var(--muted)">docs.anthropic.com/models</a></p>
       </div>
       <p id="imgApiStatus" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;line-height:1.5"></p>
+    </div>
+
+    <!-- NÄKYMÄ -->
+    <div class="settings-section" style="margin-top:20px">
+      <div class="settings-section-title">Näkymä</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="sShowLabelBar" onchange="setShowLabelBar(this.checked)" style="accent-color:var(--accent);width:16px;height:16px">
+          Näytä pikavalinnat (labelit) syöttökentän yläpuolella
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="sShowDeadline" onchange="setShowDeadline(this.checked)" style="accent-color:var(--accent);width:16px;height:16px">
+          Näytä deadline-kenttä ja kalenterinäkymä
+        </label>
+      </div>
     </div>
 
     <!-- KALENTERI -->
@@ -1301,8 +1329,7 @@ function card(p, mode) {
     actions = `<div class="card-actions">
       <button class="btn btn-ghost btn-sm" onclick="openModal('${p.id}',event)" style="display:inline-flex;align-items:center;gap:5px" title="Muokkaa"><i data-lucide="pencil"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="qDone('${p.id}',event)" style="display:inline-flex;align-items:center" title="Arkistoi"><i data-lucide="archive"></i></button>
-      <button class="btn btn-ghost btn-sm" onclick="openAttach('${p.id}',event)" style="display:inline-flex;align-items:center" title="Liitä lappuun"><i data-lucide="link"></i></button>
-      <button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
+<button class="btn btn-ghost btn-sm" onclick="copyCard('${p.id}',event)" style="display:inline-flex;align-items:center" title="Kopioi sisältö"><i data-lucide="clipboard"></i></button>
       <button class="btn btn-ghost btn-sm" onclick="openAi('${p.id}',event)" style="display:inline-flex;align-items:center" title="AI-toiminnot"><i data-lucide="sparkles"></i></button>
       ${calBtn}
     </div>`;
@@ -1967,6 +1994,10 @@ function openSettings() {
   renderAiSvcPicker();
   renderImgSvcPicker();
   renderCalSvcPicker();
+  const lb = document.getElementById('sShowLabelBar');
+  if (lb) lb.checked = cfg.showLabelBar !== false;
+  const dl = document.getElementById('sShowDeadline');
+  if (dl) dl.checked = cfg.showDeadline !== false;
   lucide.createIcons();
 }
 function closeSettings() {
@@ -2269,26 +2300,53 @@ function smartSplit(raw) {
   return { title: raw.trim(), desc: '' };
 }
 
-function quickPostit(input) {
-  const raw = input.value.trim();
-  if (!raw) return;
-  const { title, desc } = smartSplit(raw);
+function quickPostit() {
+  const titleEl = document.getElementById('postitTitle');
+  const descEl  = document.getElementById('postitDesc');
+  const title = (titleEl?.value || '').trim();
+  const desc  = (descEl?.value  || '').trim();
+  if (!title && !desc) return;
   const now = new Date().toISOString();
   projects.unshift({
-    id: uid(), title, desc, priority: '', status: 'todo',
+    id: uid(), title: title || desc, desc: title ? desc : '',
+    priority: '', status: 'todo',
     deadline: '', est: 0, logged: 0, color: '', group: '',
     subs: [], archived: false, draft: true, createdAt: now, updatedAt: now,
   });
-  input.value = '';
+  if (titleEl) titleEl.value = '';
+  if (descEl)  descEl.value  = '';
   render();
   triggerSave();
-  input.focus();
+  titleEl?.focus();
   toast('Lappu lisätty!');
+}
+
+function setShowLabelBar(v) {
+  cfg.showLabelBar = v;
+  saveCfg();
+  renderLabelBar();
+}
+
+function setShowDeadline(v) {
+  cfg.showDeadline = v;
+  saveCfg();
+  applyDeadlineVisibility();
+}
+
+function applyDeadlineVisibility() {
+  const show = cfg.showDeadline !== false;
+  // Kalenteri-nappi headerissa
+  const calBtn = document.getElementById('calHeaderBtn');
+  if (calBtn) calBtn.style.display = show ? '' : 'none';
+  // Deadline-kenttä modalissa
+  const dlField = document.getElementById('deadlineField');
+  if (dlField) dlField.style.display = show ? '' : 'none';
 }
 
 function renderLabelBar() {
   const el = document.getElementById('labelBar');
   if (!el) return;
+  if (cfg.showLabelBar === false) { el.innerHTML = ''; return; }
   el.innerHTML = getLabels().map(c =>
     `<button class="label-bar-btn" onclick="quickLabel('${c}')" title="${c}">
       <i data-lucide="${c}"></i>
@@ -2629,6 +2687,7 @@ if (cfg.gistId && !cfg.gists) {
 }
 lucide.createIcons();
 renderLabelBar();
+applyDeadlineVisibility();
 renderGistSwitcher();
 if (!cfg.token || !cfg.gistId) {
   document.getElementById('setupOverlay').classList.remove('hidden');
