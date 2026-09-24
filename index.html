@@ -318,28 +318,28 @@
     /* ── POSTIT CAPTURE ── */
     .postit-capture {
       max-width: 860px; margin: 0 auto 16px;
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .postit-field {
       background: var(--surface);
       border: 1.5px solid transparent;
       border-image: linear-gradient(90deg, rgba(255,100,0,.45), rgba(255,200,0,.75), rgba(255,100,0,.45)) 1;
-      border-radius: 0;
-      overflow: hidden;
     }
-    .postit-capture:focus-within {
+    .postit-field:focus-within {
       border-image: linear-gradient(90deg, rgba(255,120,0,.75), rgba(255,215,0,1), rgba(255,120,0,.75)) 1;
     }
     .postit-title-input {
-      width: 100%; padding: 13px 16px 6px; font-size: 15px; font-weight: 600;
+      width: 100%; padding: 11px 16px; font-size: 15px; font-weight: 600;
       background: none; border: none; color: var(--text); outline: none; box-sizing: border-box;
     }
     .postit-desc-input {
-      width: 100%; padding: 4px 16px 10px; font-size: 14px; line-height: 1.55;
+      width: 100%; padding: 10px 16px; font-size: 14px; line-height: 1.55;
       background: none; border: none; color: var(--text); outline: none;
-      resize: none; font-family: inherit; box-sizing: border-box; min-height: 72px;
+      resize: none; font-family: inherit; box-sizing: border-box; min-height: 80px;
     }
     .postit-capture-foot {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 4px 10px 8px 16px;
+      padding: 0 2px;
     }
     .postit-capture-hint {
       font-size: 12px; color: #3a3a3a; white-space: nowrap;
@@ -674,10 +674,14 @@
 <div class="main" style="padding-bottom:0;padding-top:16px">
   <div class="label-bar" id="labelBar"></div>
   <div class="postit-capture">
-    <input type="text" id="postitTitle" class="postit-title-input"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('postitDesc').focus()}">
-    <textarea id="postitDesc" class="postit-desc-input" rows="3"
-      onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter')quickPostit()"></textarea>
+    <div class="postit-field">
+      <input type="text" id="postitTitle" class="postit-title-input"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('postitDesc').focus()}">
+    </div>
+    <div class="postit-field">
+      <textarea id="postitDesc" class="postit-desc-input" rows="3"
+        onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter')quickPostit()"></textarea>
+    </div>
     <div class="postit-capture-foot">
       <span class="postit-capture-hint">⌘ Enter ↵</span>
       <button class="btn btn-ghost btn-sm" onclick="quickPostit()" style="font-size:12px">Tallenna</button>
