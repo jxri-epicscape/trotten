@@ -714,7 +714,7 @@
       <input class="fi" id="mDeadline" type="date">
     </div>
 
-    <div class="fg" style="margin-bottom:8px">
+    <div class="fg" style="margin-bottom:8px" id="labelColorField">
       <label class="fl">Label & Väri</label>
       <div style="border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px">
         <div class="cat-picker" id="catPicker"></div>
@@ -2325,6 +2325,7 @@ function setShowLabelBar(v) {
   cfg.showLabelBar = v;
   saveCfg();
   renderLabelBar();
+  applyLabelVisibility();
 }
 
 function setShowDeadline(v) {
@@ -2335,12 +2336,16 @@ function setShowDeadline(v) {
 
 function applyDeadlineVisibility() {
   const show = cfg.showDeadline !== false;
-  // Kalenteri-nappi headerissa
   const calBtn = document.getElementById('calHeaderBtn');
   if (calBtn) calBtn.style.display = show ? '' : 'none';
-  // Deadline-kenttä modalissa
   const dlField = document.getElementById('deadlineField');
   if (dlField) dlField.style.display = show ? '' : 'none';
+}
+
+function applyLabelVisibility() {
+  const show = cfg.showLabelBar !== false;
+  const lcField = document.getElementById('labelColorField');
+  if (lcField) lcField.style.display = show ? '' : 'none';
 }
 
 function renderLabelBar() {
@@ -2418,6 +2423,8 @@ function openModal(id, e) {
   mColor    = p ? (p.color||'') : '';
   mCategory = p ? (p.group||'') : '';
 
+  applyLabelVisibility();
+  applyDeadlineVisibility();
   renderCatPicker();
   renderCPicker();
   lucide.createIcons();
@@ -2687,6 +2694,7 @@ if (cfg.gistId && !cfg.gists) {
 }
 lucide.createIcons();
 renderLabelBar();
+applyLabelVisibility();
 applyDeadlineVisibility();
 renderGistSwitcher();
 if (!cfg.token || !cfg.gistId) {
